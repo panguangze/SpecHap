@@ -5,55 +5,29 @@
 #include "phaser.h"
 #include "htslib/vcf.h"
 #include "type.h"
+#include "util.h"
 #include <iostream>
 #include <cstdlib>
 #include <unordered_map>
 
 // TODO clarify between variant count and block count
 
-Phaser::Phaser(std::vector<option::Option> &options)
+Phaser::Phaser(const std::string &fnvcf, const std::string &fnout, const std::string &fnfrag, const std::string &fnbed)
 {
-    threshold = pow(10, -7);
-    if (options[TENX])
-        op = op_mode::TENX;
-    else if (options[HIC])
-        op = op_mode::HIC;
-    else if (options[PACBIO])
-        op = op_mode::PACBIO;
-    else if (options[NANOPORE])
-        op = op_mode::NANOPORE;
-    else
-        op = op_mode::PE;
-    //op_mode frag_file_op_mode = detect_frag_file_type(options[FRAGMENT].arg);
-
-
-    frvcf = new VCFReader(options[VCF].arg);
-    fwvcf = new VCFWriter(frvcf->header, options[OUT].arg);
-    frfrag = new FragmentReader(options[FRAGMENT].arg);
-    this->use_input_ps = false;
-
-    if (options[KEEP_PHASING_INFO])
-        this->use_input_ps = true;
     
-    if (options[WINDOW_SIZE].arg == nullptr)
-        window_size = 200;
-    else
-        window_size = uint(atoi(options[WINDOW_SIZE].arg));
-    if (options[WINDOW_OVERLAP].arg == nullptr)
-        overlap = 60;
-    else
-        overlap = int(atoi(options[WINDOW_OVERLAP].arg));
-
+    frvcf = new VCFReader(fnvcf.data());
+    fwvcf = new VCFWriter(frvcf->header, fnout.data());
+    frfrag = new FragmentReader(fnfrag.data());
+    frbed = nullptr;
     coverage = 30;  //deprecated
-    max_barcode_spanning_length = 60000;    
-    recursive_limit = 15;       
 
-    if (options[TENX])
-        frbed = new BEDReader(options[STATS].arg);
+    if (OPERATION == MODE_10X)
+        frbed = new BEDReader(fnbed.data());
 
     bool use_secondary = false;
+    threshold = 1e-5;
 
-    spectral = new Spectral(frfrag, frbed, op, threshold, coverage, max_barcode_spanning_length, use_secondary);
+    spectral = new Spectral(frfrag, frbed, threshold, coverage, use_secondary);
 }
 
 Phaser::~Phaser()
@@ -62,7 +36,8 @@ Phaser::~Phaser()
     delete fwvcf;
     delete frfrag;
     delete spectral;
-    delete frbed;
+    if (frbed != nullptr)
+        delete frbed;
 }
 
 
@@ -72,8 +47,11 @@ int Phaser::load_contig_records(ChromoPhaser *chromo_phaser)
     while (true)
     {
         ptr_ResultforSingleVariant result = std::make_shared<ResultforSingleVariant>();
-        if (this->frvcf->get_next_record_contig(result, false) != 0)
+        int status = this->frvcf->get_next_record_contig(result, false);
+        if (status < 0)
             break;
+        else if (status > 0)
+            continue;
         chromo_phaser->results_for_variant.push_back(result);
     }
 
@@ -94,8 +72,11 @@ int Phaser::load_contig_blocks(ChromoPhaser *chromo_phaser)
     while (true)
     {
         ptr_ResultforSingleVariant result = std::make_shared<ResultforSingleVariant>();
-        if (this->frvcf->get_next_record_contig(result, true) != 0)
+        int status = this->frvcf->get_next_record_contig(result, true);
+        if (status < 0) //eof, new chromosome 
             break;
+        else if (status > 0) //homo 
+            continue;
         chromo_phaser->results_for_variant.push_back(result);
     }
 
@@ -138,8 +119,15 @@ void Phaser::phasing()
     {
         if (frvcf->jump_to_contig(rid) != 0)
             break;
-        ChromoPhaser *chromo_phaser = new ChromoPhaser(rid, frvcf->contigs[rid], overlap, window_size);
-        if (this->use_input_ps)
+        if (std::find(contigs.begin(), contigs.end(), frvcf->contigs[rid]) == contigs.end()) {
+            std::string mess = " skipp " + std::string(frvcf->contigs[rid]);
+            logging(std::cerr, mess);
+            continue;
+        }
+        ChromoPhaser *chromo_phaser = new ChromoPhaser(rid, frvcf->contigs[rid], WINDOW_OVERLAP, WINDOW_SIZE);
+        std::string mess = "phasing haplotype for " + std::string(frvcf->contigs[rid]);
+        logging(std::cerr, mess);
+        if (KEEP_PS)
             load_contig_blocks(chromo_phaser);
         else
             load_contig_records(chromo_phaser);
@@ -165,11 +153,11 @@ void Phaser::phasing_by_chrom(uint var_count, ChromoPhaser *chromo_phaser)
     {
         if (chromo_phaser->phased->rest_blk_count > chromo_phaser->init_block_count)
             break;
-        if (op == op_mode::TENX)
-            chromo_phaser->phased->update_phasing_info(max_barcode_spanning_length);
+        if (OPERATION == MODE_10X)
+            chromo_phaser->phased->update_phasing_info(MAX_BARCODE_SPANNING);
         else
             {
-                if (this->use_input_ps)
+                if (KEEP_PS)
                     chromo_phaser->phased->update_phasing_info_keep_phased();
                 else 
                     chromo_phaser->phased->update_phasing_info();
@@ -177,7 +165,7 @@ void Phaser::phasing_by_chrom(uint var_count, ChromoPhaser *chromo_phaser)
         spectral->solver();
     }
         //std::cout << chromo_phaser->phased->phased_blk_count << std::endl;
-    if (op == op_mode::HIC)
+    if (OPERATION == MODE_HIC)
     {
         phase_HiC_poss(chromo_phaser);
     }
@@ -197,7 +185,7 @@ void Phaser::phase_HiC_poss(ChromoPhaser *chromo_phaser)
         int count = 0;
     
         //split into window again
-        int HiC_poss_block = 300, overlap = 100;
+        int HiC_poss_block = WINDOW_SIZE, overlap = WINDOW_OVERLAP;
         if (nblocks > HiC_poss_block + overlap)
         {
             this->phase_HiC_recursive(chromo_phaser, connected_comp);  
@@ -241,7 +229,7 @@ void Phaser::phase_HiC_recursive(ChromoPhaser *chromo_phaser, std::set<uint> &co
     std::unordered_map<uint, uint> id2var;
     std::vector<uint> prev_block_idxes;
     std::map<uint, uint> block_idxes;
-    int HiC_poss_block = 300, overlap = 100;
+    int HiC_poss_block = WINDOW_SIZE, overlap = WINDOW_OVERLAP;
     int n_recursion = 0;
 
     for (auto blk_start_id: connected_comp)
@@ -253,7 +241,7 @@ void Phaser::phase_HiC_recursive(ChromoPhaser *chromo_phaser, std::set<uint> &co
         count++; 
     }
     int prev_blk_count = block_idxes.size();
-    while (n_recursion < this->recursive_limit || block_idxes.size() != prev_blk_count)
+    while (n_recursion < RECURSIVE_LIMIT || block_idxes.size() != prev_blk_count)
     {
         //now for each recurssion
 
@@ -370,5 +358,19 @@ void Phaser::phase_HiC_recursive(ChromoPhaser *chromo_phaser, std::set<uint> &co
 
         n_recursion++;
     }
-}   
+}
+
+void Phaser::set_contigs(std::string &s) {
+    size_t pos = 0;
+    std::string token;
+    if ((pos = s.find(',')) == std::string::npos){
+        contigs.push_back(s);
+        return;
+    }
+    while ((pos = s.find(',')) != std::string::npos) {
+        token = s.substr(0, pos);
+        contigs.push_back(token);
+        s.erase(0, pos + 1);
+    }
+}
 

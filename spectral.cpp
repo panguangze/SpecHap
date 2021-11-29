@@ -8,11 +8,13 @@
 #include <algorithm>
 #include <iostream>
 #include "indexing.h"
+#include "phaser.h"
+#include "type.h"
 #include <limits>
 #include <unordered_set>
 #include <cmath>
 #include <tuple>
-
+#include <ctime>
 
 void print_to_file(const char *filename, GMatrix &mat)
 {
@@ -71,13 +73,13 @@ void print_hap(ptr_PhasedBlock &block, uint idx)
 }
 
 // initialization
-Spectral::Spectral(FragmentReader *fr, BEDReader *frbed, op_mode op, double threhold, int coverage, int max_barcode_spanning_length, bool use_secondary)
-        : fr(fr), op(op), threhold(threhold), raw_graph(nullptr), raw_count(nullptr), phasing_window(nullptr), epsilon(10e-2),
-        coverage(coverage), max_barcode_spanning_length(max_barcode_spanning_length), barcode_linker_index_set(false),
+Spectral::Spectral(FragmentReader *fr, BEDReader *frbed, double threhold, int coverage, bool use_secondary)
+        : fr(fr), threhold(threhold), raw_graph(nullptr), raw_count(nullptr), phasing_window(nullptr), epsilon(10e-2),
+        coverage(coverage), barcode_linker_index_set(false),
         chromo_phaser(nullptr), barcode_linker(nullptr), frbed(frbed), use_secondary(use_secondary), q_sum(0.0), q_aver(0.0)
 {
     block_no = 1;
-    this->barcode_linker = new BarcodeLinkers(max_barcode_spanning_length);
+    this->barcode_linker = new BarcodeLinkers(MAX_BARCODE_SPANNING);
     this->region_frag_stats = new RegionFragStats();
     this->barcode_linker->regionFragStats = region_frag_stats;
 }
@@ -128,15 +130,15 @@ void Spectral::reset()
         this->raw_graph[i] = 0.0;
         this->raw_count[i] = 0;
     }
-    if (op == op_mode::TENX)
+    if (OPERATION == MODE_10X)
         read_fragment_10x();
-    else if (op == op_mode::HIC)
+    else if (OPERATION == MODE_HIC)
         read_fragment_hic();
-    else if (op == op_mode::PE)
+    else if (OPERATION == MODE_PE)
         read_fragment();
-    else if (op == op_mode::NANOPORE)
+    else if (OPERATION == MODE_NANOPORE)
         read_fragment_nanopore();
-    else if (op == op_mode::PACBIO)
+    else if (OPERATION == MODE_PACBIO)
         read_fragment_pacbio();
 }
 
@@ -197,12 +199,14 @@ CMatrix Spectral::slice_submat(std::set<uint> &variants_mat, bool t)
 // read fragment matrix
 void Spectral::read_fragment()
 {
+    this->frag_buffer.clear();
     Fragment fragment;
     ViewMap weighed_graph(raw_graph, n, n);
     CViewMap count_graph(raw_count, n, n);
     while (fr->get_next_pe(fragment))
     {
         add_snp_edge(fragment, weighed_graph, count_graph);
+        this->frag_buffer.push_back(fragment);
         fragment.reset();
     }
     cal_prob_matrix(weighed_graph, count_graph, nullptr, nullptr, nullptr);
@@ -237,11 +241,13 @@ void Spectral::read_fragment_10x()
 void Spectral::read_fragment_hic()
 {
     Fragment fragment;
+    this->frag_buffer.clear();
     CViewMap count_graph(raw_count, n, n);
     ViewMap weighed_graph(raw_graph, n, n);
     while (fr->get_next_hic(fragment))
     {
         add_snp_edge(fragment, weighed_graph, count_graph);
+        this->frag_buffer.push_back(fragment);
         if ( fragment.snps[0].first >= phasing_window->prev_window_start)
             if (fragment.insertion_size >= 5000 && fragment.insertion_size <= 40000000)
                 this->hic_linker_container.add_HiC_info(fragment);
@@ -504,6 +510,7 @@ void Spectral::cal_prob_matrix(ViewMap &weighted_graph, CViewMap &count_graph, G
                 count_graph(2*i, 2*j) ++;
                 count_graph(2*i + 1, 2*j + 1) ++;
                 var_graph.add_edge(i, j, true);
+                
             }
             else if (score < 0)
             {
@@ -512,6 +519,7 @@ void Spectral::cal_prob_matrix(ViewMap &weighted_graph, CViewMap &count_graph, G
                 count_graph(2*i, 2*j + 1) ++;
                 count_graph(2*i + 1, 2*j) ++;
                 var_graph.add_edge(i, j, false);
+                //var_graph.add_edge(i, j, true);
             }
 
             else
@@ -618,8 +626,8 @@ void Spectral::solver()
             GMatrix sub_mat = this->slice_submat(variants_mat);
             CMatrix sub_count = this->slice_submat(variants_mat, true);
             if (variant_graph.fully_seperatable(mat_idx))
-                find_connected_component(sub_count, variants_mat);
-            else
+                ;//find_connected_component(sub_count, variants_mat);
+            
             {
                 int block_count = 0;
                 std::map<uint, int> subroutine_map;
@@ -639,7 +647,7 @@ void Spectral::solver()
             block_no++;
         }
     }
-    if (this->op == op_mode::TENX)
+    if (OPERATION == MODE_10X)
     {
         for (auto start_idx: this->phased_block_starts)
             barcode_aware_filter(start_idx.first);
@@ -786,7 +794,7 @@ void Spectral::solver_subroutine(int block_count, std::map<uint, int> & subrouti
     CViewMap sub_count_graph(sub_count, N, N);
     GMatrix weight_mat;
     CMatrix count_mat;
-    if (this->op == op_mode::TENX)
+    if (OPERATION == MODE_10X)
         add_snp_edge_barcode_subroutine(sub_weighed_graph, sub_count_graph, sub_variant_graph, subroutine_map, subroutine_blk_start);
     else
         add_snp_edge_subroutine(sub_weighed_graph, sub_count_graph, sub_variant_graph, subroutine_map, subroutine_blk_start, block_qualities);
@@ -1106,6 +1114,17 @@ void Spectral::separate_connected_component(const Eigen::VectorXd &vec, const st
     {
         idx = phasing_window->mat_idx2var_idx(*it);
         ptr_PhasedBlock block_to_merge = phasing_window->blocks[idx];
+        //shall not use field with zero value
+        if (abs(vec(2*i)) < threhold || abs(vec(2*i+1)) < threhold)
+        {
+            if (block_to_merge->size() == 1)
+            {
+                block_to_merge->results[idx]->set_filter(filter_type::POOLRESULT);
+            }
+            this->variant_graph.remove_variant(*it);
+            continue;
+        }
+        //TODO: potential bug here， seperate the if condition for phased block
         if (block_to_merge->results[idx]->get_filter() == filter_type::PASS)
         {
             double diff =abs(abs(vec(2*i)) - abs(vec(2*i + 1)));
@@ -1236,7 +1255,8 @@ bool Spectral::cal_fiedler_vec(int nev, const Eigen::MatrixBase<Derived> &adj_ma
     return coverage;
 }
 
-
+//TODO: check whether we can directly yield the haplotype in this function. urgent! this is a bug
+//TODO: refine code for the logics to work same for Hi-C NGS, 10X, Nanopore and pacbio 
 void Spectral::call_haplotype(GMatrix &adj_mat, const std::set<uint> &variant_idx_mat, int& block_count, std::map<uint, int> &subroutine_map, std::map<uint, uint> &subroutine_blk_start, bool sub, std::map<uint, double> &block_quality)
 {
     if (variant_idx_mat.size() == 1)
@@ -1278,9 +1298,9 @@ void Spectral::call_haplotype(GMatrix &adj_mat, const std::set<uint> &variant_id
             {
                 fiedler_idx = 2;
                 if (trivial_fiedler(vecs.col(fiedler_idx)))
-                    std::cout << "fail to solve fielder vector at \n";
-                else
-                    separate_connected_component(vecs.col(fiedler_idx), variant_idx_mat);
+                    ;//std::cout << "fail to solve fielder vector at \n"; //failed we seperate block by doing nothing.
+                //else
+                //   separate_connected_component(vecs.col(fiedler_idx), variant_idx_mat);
             }
             else  //block to be cut, enter recursive solver
             {
@@ -1468,6 +1488,8 @@ std::unordered_map<uint, std::set<uint>> Spectral::load_hic_poss_info()
     {
         for (auto &info : linker.second.hic_info)
         {
+            if (info.first >= this->chromo_phaser->results_for_variant.size())
+                continue;
             ptr_ResultforSingleVariant variant =  this->chromo_phaser->results_for_variant[info.first];
             if (is_uninitialized(variant->block))
             {
