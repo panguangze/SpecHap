@@ -1184,6 +1184,9 @@ void Spectral::barcode_aware_filter(uint block_start_idx)
 {
     std::set<uint> filtered_idx;
     ptr_PhasedBlock phased_block = phasing_window->blocks[block_start_idx];
+//    fixme, when connect two connected coms, block_start_idx not update, but the element is deleted, phased_block be none.
+    if (phased_block == nullptr)
+        return;
     // Notice that after phasing, every barcode provides support for at most one block
     BarcodeLinker::iterator iter;
     this->barcode_linker_index_set ? iter = this->barcode_linker->barcodes.find(this->barcode_index) : iter = this->barcode_linker->barcodes.begin();
