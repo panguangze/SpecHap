@@ -25,8 +25,8 @@ Phaser::Phaser(const std::string &fnvcf, const std::string &fnout, const std::st
         frbed = new BEDReader(fnbed.data());
 
     bool use_secondary = false;
-    threshold = 1e-5;
-
+//    threshold = 1e-5;
+    threshold = 0;
     spectral = new Spectral(frfrag, frbed, threshold, coverage, use_secondary);
 }
 
@@ -119,7 +119,7 @@ void Phaser::phasing()
     {
         if (frvcf->jump_to_contig(rid) != 0)
             break;
-        if (std::find(contigs.begin(), contigs.end(), frvcf->contigs[rid]) == contigs.end()) {
+        if (!contigs.empty() && std::find(contigs.begin(), contigs.end(), frvcf->contigs[rid]) == contigs.end()) {
             std::string mess = " skipp " + std::string(frvcf->contigs[rid]);
             logging(std::cerr, mess);
             continue;
