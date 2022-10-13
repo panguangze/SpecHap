@@ -26,12 +26,13 @@ bool HAS_HIC;
 bool HAS_TENX;
 int SIDX;
 std::vector<int> OPERATIONS;
+bool CHECK_SCORE = true;
 
 
 enum optionIndex
 {
     UNKNOWN, HELP,CONTIGS, VCF,IDX, FRAGMENT, OUT, TENX, HIC, _WINDOW_SIZE, COVERAGE, _RECURSIVE_LIMIT, NANOPORE, PACBIO, NOSORT,
-    _MAX_BARCODE_SPANNING_LENGTH, _WINDOW_OVERLAP, STATS, _NEWFORMAT, USESECONDARY, _KEEP_PHASING_INFO, _BASEOFFSET, _HYBRID,PROTOCOLS
+    _MAX_BARCODE_SPANNING_LENGTH, _WINDOW_OVERLAP, STATS, _NEWFORMAT, USESECONDARY, _KEEP_PHASING_INFO, _BASEOFFSET, _HYBRID,PROTOCOLS,_NO_CHECK_SORE
 };
 
 
@@ -91,7 +92,7 @@ const option::Descriptor usage[] =
                 {_BASEOFFSET,       0, "", "base_offset",             Arg::Numeric,  "\t--base_offset\tQuality of set for read base, default is 33."},
                 {_KEEP_PHASING_INFO,0, "", "keep_phasing_info",       Arg::None,     "\t--keep_phasing_info\tSpecified when trying to keep previous phasing info"},
                 {IDX,0, "", "idx",       Arg::Numeric,     "\t--idx\tSample idx in vcf file"},
-
+                {_NO_CHECK_SORE,0, "", "ncs",       Arg::None,     "\t--cs\tSpechap will not filter out phasing edge with reads support situation"},
                 {0,           0,   0,          0,               0,   0 }
         };
 
@@ -149,6 +150,8 @@ int main(int argc, char *argv[])
         BASE_OFFSET = int(atoi(options[_BASEOFFSET].arg));
     if (options[_KEEP_PHASING_INFO])
         KEEP_PS = true;
+    if (options[_NO_CHECK_SORE])
+        CHECK_SCORE = false;
     if (options[_WINDOW_OVERLAP].arg != nullptr)
         WINDOW_OVERLAP = int(atoi(options[_WINDOW_OVERLAP].arg));
     if (options[_WINDOW_SIZE].arg != nullptr)
