@@ -83,6 +83,8 @@ private:
     std::set<uint> break_idxs;
 public:
     const std::set<uint> &getBreakIdxs() const;
+    std::string confidence_file;
+    std::ofstream conf_io;
 
 private:
 

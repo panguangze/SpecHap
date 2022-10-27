@@ -171,6 +171,7 @@ public:
                         result->set_hap_1();
                 }
                 result->set_phased();
+                std::cout<<"!"<<std::endl;
                 //std::cout<< allele0 << ";" << allele1 << std::endl;
             }
             free(gt_arr);

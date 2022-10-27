@@ -32,7 +32,7 @@ bool CHECK_SCORE = true;
 enum optionIndex
 {
     UNKNOWN, HELP,CONTIGS, VCF,IDX, FRAGMENT, OUT, TENX, HIC, _WINDOW_SIZE, COVERAGE, _RECURSIVE_LIMIT, NANOPORE, PACBIO, NOSORT,
-    _MAX_BARCODE_SPANNING_LENGTH, _WINDOW_OVERLAP, STATS, _NEWFORMAT, USESECONDARY, _KEEP_PHASING_INFO, _BASEOFFSET, _HYBRID,PROTOCOLS,_NO_CHECK_SORE
+    _MAX_BARCODE_SPANNING_LENGTH, _WINDOW_OVERLAP, STATS, _NEWFORMAT, USESECONDARY, _KEEP_PHASING_INFO, _BASEOFFSET, _HYBRID,PROTOCOLS,_NO_CHECK_SORE, CONFIDENCE_FILE
 };
 
 
@@ -92,7 +92,8 @@ const option::Descriptor usage[] =
                 {_BASEOFFSET,       0, "", "base_offset",             Arg::Numeric,  "\t--base_offset\tQuality of set for read base, default is 33."},
                 {_KEEP_PHASING_INFO,0, "", "keep_phasing_info",       Arg::None,     "\t--keep_phasing_info\tSpecified when trying to keep previous phasing info"},
                 {IDX,0, "", "idx",       Arg::Numeric,     "\t--idx\tSample idx in vcf file"},
-                {_NO_CHECK_SORE,0, "", "ncs",       Arg::None,     "\t--cs\tSpechap will not filter out phasing edge with reads support situation"},
+                {_NO_CHECK_SORE,0, "", "ncs",       Arg::None,     "\t--ncs\tSpechap will not filter out phasing edge with reads support situation"},
+                {CONFIDENCE_FILE,               0, "cf", "cfile",                    Arg::Required, "\t-cf <arg>,\t--cfile=<arg>\tconfidence file for snps"},
                 {0,           0,   0,          0,               0,   0 }
         };
 
@@ -177,6 +178,9 @@ int main(int argc, char *argv[])
 //        OPERATION = MODE_HYBRID;
 //    }
 //
+    std::string confidence_f = "";
+    if (options[CONFIDENCE_FILE].arg != nullptr)
+        confidence_f = options[CONFIDENCE_FILE].arg;
     std::string invcf = options[VCF].arg;
     std::string out = options[OUT].arg;
     std::string frag = options[FRAGMENT].arg;
@@ -211,6 +215,7 @@ int main(int argc, char *argv[])
         std::string contigs = options[CONTIGS].arg;
         phaser->set_contigs(contigs);
     }
+    phaser->confidence_file = confidence_f;
     phaser->phasing();
     delete phaser;
     return 0;

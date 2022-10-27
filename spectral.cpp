@@ -939,6 +939,10 @@ void Spectral::find_connected_component_dfs(const Eigen::MatrixBase<Derived> &ad
             {
                 block_to_merge->results[idx]->set_hap(prev_is_ref);
                 block_to_merge->results[idx]->set_phased();
+                
+                conf_io<<"dfs"<<"\t"<< idx <<std::endl;
+
+
                 curr_is_ref = block_to_merge->results[idx]->is_REF();
             }
             else
@@ -958,6 +962,9 @@ void Spectral::find_connected_component_dfs(const Eigen::MatrixBase<Derived> &ad
                 block_to_merge->results[idx]->set_hap(!prev_is_ref);
                 block_to_merge->results[idx]->set_phased();
                 curr_is_ref = block_to_merge->results[idx]->is_REF();
+                
+                conf_io<<"dfs"<<"\t"<< idx <<std::endl;
+
             }
             else
             {
@@ -1014,6 +1021,9 @@ void Spectral::find_connected_component_dfs(const Eigen::MatrixBase<Derived> &ad
                 block_to_merge->results[idx]->set_hap(prev_is_ref);
                 block_to_merge->results[idx]->set_phased();
                 curr_is_ref = block_to_merge->results[idx]->is_REF();
+                
+                conf_io<<"dfs"<<"\t"<< idx <<std::endl;
+
             }
             else
             {
@@ -1032,6 +1042,9 @@ void Spectral::find_connected_component_dfs(const Eigen::MatrixBase<Derived> &ad
                 block_to_merge->results[idx]->set_hap(!prev_is_ref);
                 block_to_merge->results[idx]->set_phased();
                 curr_is_ref = block_to_merge->results[idx]->is_REF();
+                
+                conf_io<<"dfs"<<"\t"<< idx <<std::endl;
+
             }
             else
             {
@@ -1081,6 +1094,9 @@ void Spectral::find_connected_component(const Eigen::MatrixBase<Derived> &adj_ma
     {
         phased_blk->results[start_idx]->set_phased();
         phased_blk->results[start_idx]->block = phased_blk;
+//        std::cout<<"dfs"<<start_idx<<std::endl;
+        conf_io<<"dfs"<<"\t"<<start_idx<<std::endl;
+
     }
     std::set<uint> &nxt_vars = sub_variant_graph.graph[*it];
     for (auto nxt_var : nxt_vars)
@@ -1118,6 +1134,8 @@ void Spectral::find_connected_component(const Eigen::MatrixBase<Derived> &adj_ma
     {
         phased_blk->results[start_idx]->set_phased();
         phased_blk->results[start_idx]->block = phased_blk;
+//        std::cout<<"dfs"<< start_idx<<std::endl;
+        conf_io<<"dfs"<<"\t"<<start_idx<<std::endl;
     }
     std::set<uint> &nxt_vars = this->variant_graph.graph[*it];
     for (auto nxt_var : nxt_vars)
@@ -1174,6 +1192,9 @@ void Spectral::separate_connected_component(const Eigen::VectorXd &vec, const st
     {
         phased_blk->results[start_idx]->block = phased_blk;
         phased_blk->results[start_idx]->set_phased();
+//        std::cout<<"sepc0"<<"\t"<<start_idx<<"\t"<< vec(2 * start_idx)<<"\t"<<vec(2 * start_idx + 1)<<std::endl;
+        conf_io<<"sepc0"<<"\t"<<start_idx<<"\t"<< vec(2 * start_idx)<<"\t"<<vec(2 * start_idx + 1) <<std::endl;
+
     }
 
     //REF belongs to class 1
@@ -1218,6 +1239,9 @@ void Spectral::separate_connected_component(const Eigen::VectorXd &vec, const st
                 {
                     block_to_merge->results[idx]->set_phased();
                     block_to_merge->results[idx]->set_hap(ref_is_one);
+//                    std::cout<<"spec1"<<"\t"<<idx<<"\t"<< vec(2 * idx)<<"\t"<<vec(2 * idx + 1)<< idx <<std::endl;
+                    conf_io<<"sepc1"<<"\t"<<idx<<"\t"<< vec(2 * idx)<<"\t"<<vec(2 * idx + 1)<< idx <<std::endl;
+
                 }
                 else
                 {
@@ -1247,6 +1271,10 @@ void Spectral::separate_connected_component(const Eigen::VectorXd &vec, const st
                 {
                     block_to_merge->results[idx]->set_phased();
                     block_to_merge->results[idx]->set_hap(!ref_is_one);
+//                    std::cout<<"spec2"<<"\t"<<idx<<"\t"<< vec(2 * idx)<<"\t"<<vec(2 * idx + 1)<<std::endl;
+                    conf_io<<"sepc2"<<"\t"<<idx<<"\t"<< vec(2 * idx)<<"\t"<<vec(2 * idx + 1)<<std::endl;
+
+
                 }
                 else
                 {
@@ -1415,6 +1443,12 @@ void Spectral::call_haplotype(GMatrix &adj_mat, const std::set<uint> &variant_id
             separate_connected_component(vecs.col(fiedler_idx), variant_idx_mat);
             //if (!sub)
             //    poss_phase_error_correction(phasing_window->mat_idx2var_idx(*variant_idx_mat.begin()));
+//            std::cout<<"vals: "<<vals<<std::endl;
+//            std::cout<<"vals len: "<<vals.size()<<std::endl;
+//
+//            std::cout<<"vals1: "<<vals(1)<<std::endl;
+//            std::cout<<"vecs: "<<vecs<<std::endl;
+//            std::cout<<"vecs.rows: "<< vecs.rows()<<std::endl;
             block_quality[block_count] = log10(vals(1) *  pow(vecs.rows(), 0.5));
             for (auto & idx : variant_idx_mat)
                 subroutine_map.emplace(idx, block_count);

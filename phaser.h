@@ -28,6 +28,8 @@ public:
     ~Phaser();
     void phasing();
     void set_contigs(std::string& contigs);
+    std::string confidence_file;
+
 
 private:
 //    contigs to phase

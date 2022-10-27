@@ -126,12 +126,12 @@ int Phaser::load_contig_blocks(ChromoPhaser *chromo_phaser)
 void Phaser::phasing()
 {
     uint prev_variant_count = 0;
-
+    spectral->confidence_file = confidence_file;
+    spectral->conf_io.open(spectral->confidence_file, std::ios_base::out);
     for (uint rid = 0; rid < frvcf->contigs_count; rid++)
     {
         if (frvcf->jump_to_contig(rid) != 0)
             break;
-
         ChromoPhaser *chromo_phaser = new ChromoPhaser(rid, frvcf->contigs[rid], WINDOW_OVERLAP, WINDOW_SIZE);
         std::string mess = "phasing haplotype for " + std::string(frvcf->contigs[rid]);
         logging(std::cerr, mess);
@@ -163,6 +163,7 @@ void Phaser::phasing()
         spectral->release_chromo_phaser();
         delete chromo_phaser;
     }
+    spectral->conf_io.close();
 }
 
 
