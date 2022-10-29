@@ -1331,7 +1331,7 @@ void Spectral::separate_connected_component(const Eigen::VectorXd &vec, const st
                     block_to_merge->results[idx]->set_phased();
                     block_to_merge->results[idx]->set_hap(ref_is_one);
 //                    std::cout<<"spec1"<<"\t"<<idx<<"\t"<< vec(2 * idx)<<"\t"<<vec(2 * idx + 1)<< idx <<std::endl;
-                    conf_io<<"sepc1"<<"\t"<<idx<<"\t"<< vec(2 * idx)<<"\t"<<vec(2 * idx + 1)<< idx <<std::endl;
+                    conf_io<<"sepc1"<<"\t"<<idx<<"\t"<< vec(2 * i)<<"\t"<<vec(2 * i + 1) <<std::endl;
 
                 }
                 else
@@ -1363,7 +1363,7 @@ void Spectral::separate_connected_component(const Eigen::VectorXd &vec, const st
                     block_to_merge->results[idx]->set_phased();
                     block_to_merge->results[idx]->set_hap(!ref_is_one);
 //                    std::cout<<"spec2"<<"\t"<<idx<<"\t"<< vec(2 * idx)<<"\t"<<vec(2 * idx + 1)<<std::endl;
-                    conf_io<<"sepc2"<<"\t"<<idx<<"\t"<< vec(2 * idx)<<"\t"<<vec(2 * idx + 1)<<std::endl;
+                    conf_io<<"sepc2"<<"\t"<<idx<<"\t"<< vec(2 * i)<<"\t"<<vec(2 * i + 1)<<std::endl;
 
 
                 }
@@ -1539,8 +1539,9 @@ void Spectral::call_haplotype(GMatrix &adj_mat, const std::set<uint> &variant_id
 //
 //            std::cout<<"vals1: "<<vals(1)<<std::endl;
 //            std::cout<<"vecs: "<<vecs<<std::endl;
-//            std::cout<<"vecs.rows: "<< vecs.rows()<<std::endl;
+//            std::cout<<"vecs.rows: "<< vecs.rows()<<'\t'<< log10(vals(1) *  pow(vecs.rows(), 0.5))<<std::endl;
             block_quality[block_count] = log10(vals(1) *  pow(vecs.rows(), 0.5));
+
             for (auto & idx : variant_idx_mat)
                 subroutine_map.emplace(idx, block_count);
             subroutine_blk_start[block_count] =  *variant_idx_mat.begin();
