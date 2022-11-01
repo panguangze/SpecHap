@@ -1284,7 +1284,7 @@ void Spectral::separate_connected_component(const Eigen::VectorXd &vec, const st
         phased_blk->results[start_idx]->block = phased_blk;
         phased_blk->results[start_idx]->set_phased();
 //        std::cout<<"sepc0"<<"\t"<<start_idx<<"\t"<< vec(2 * start_idx)<<"\t"<<vec(2 * start_idx + 1)<<std::endl;
-        conf_io<<"sepc0"<<"\t"<<start_idx<<"\t"<< vec(2 * start_idx)<<"\t"<<vec(2 * start_idx + 1) <<std::endl;
+        conf_io<<"sepc0"<<"\t"<<start_idx<<"\t"<< vec(2 * 0)<<"\t"<<vec(2 * 0 + 1) <<std::endl;
 
     }
 
