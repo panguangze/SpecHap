@@ -32,7 +32,7 @@ extern int OPERATION;
 extern std::vector<int> OPERATIONS;
 extern bool HAS_HIC;
 extern bool HAS_TENX;
-
+extern bool CHECK_SCORE;
 inline double cal_score(double a, double b)
 {
     double score;
