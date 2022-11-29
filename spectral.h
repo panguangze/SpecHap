@@ -137,12 +137,16 @@ public:
 
 private:
     void add_snp_edge(Fragment &fragment, ViewMap &weighted_graph, CViewMap &count_graph, double w);
+    void read_reads_matrix(int frIdx, ViewMap &reads_graph);
+    void reads_matrix(int idx, Fragment &fragment, ViewMap &reads_graph);
+    void add_snp_edge_with_reads_matrix(Fragment &fragment, ViewMap &weighted_graph, CViewMap &count_graph, double w, ViewMap &reads_matrix);
 //    void add_snp_edge_matrix(Fragment &fragment, ViewMap &weighted_graph, CViewMap &count_graph, double w);
     void add_snp_edge_barcode(ViewMap &weighted_graph, CViewMap &count_graph);
     void add_snp_edge_hic(ViewMap &weighted_graph, CViewMap &count_graph);
     void add_snp_edge_subroutine(ViewMap &sub_weighted_graph, CViewMap &sub_count_graph, VariantGraph & sub_variant_graph, std::map<uint, int> & subroutine_map, std::map<uint, uint> & subroutine_blk_start, std::map<uint,double> &block_qualities);
     void add_snp_edge_barcode_subroutine(ViewMap &sub_weighted_graph, CViewMap &sub_count_graph, VariantGraph & sub_variant_graph, std::map<uint, int> & subroutine_map, std::map<uint, uint> & subroutine_blk_start);
     void add_snp_edge_tgs();
+    void add_snp_edge_barcode(ViewMap weighted_graph, CViewMap count_graph);
     GMatrix slice_submat(std::set<uint> &variants_mat);
     GMatrix slice_submat(std::set<uint> &variants_mat, GMatrix &adj_mat);
     CMatrix slice_submat(std::set<uint> &variants_mat, bool t);
@@ -154,6 +158,7 @@ private:
     void read_fragment_pacbio(int frIdx, ViewMap &weighted_graph, CViewMap &count_graph, double w);
     void read_fragment_matrix(int frIdx, ViewMap &weighted_graph, CViewMap &count_graph, double w);
     void read_fragment_nanopore(int frIdx, ViewMap &weighted_graph, CViewMap &count_graph);
+    void read_fragment_with_reads(int frIdx, ViewMap &weighted_graph, CViewMap &count_graph, double w, ViewMap &reads_graph);
     void poss_phase_error_correction(uint block_start_idx);
     void fragment_supported_flipping_score(ptr_PhasedBlock &phased_block, Fragment & fragment, int *supporting_reads_count, double *supporting_weight_count, std::map<uint, std::set<uint>> &connection_map);
     int locate_block_valid_start(const Eigen::VectorXd &vec);

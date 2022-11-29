@@ -13,6 +13,8 @@
 #define PROTOCOL_NANOPORE "nanopore"
 #define PURE_MATRIX "matrix"
 #define PROTOCOL_HYBRID "hybrid"
+#define READS_MATRIX "reads_matrix"
+
 bool HYBRID = false;
 bool NEW_FORMAT = false;
 bool KEEP_PS = false;
@@ -86,7 +88,7 @@ const option::Descriptor usage[] =
                 {HIC,               0, "H", "hic",                    Arg::None,     "\t-H,\t--hic\tSpecified for HiC data."},
                 {PACBIO,            0, "P", "pacbio",                 Arg::None,     "\t-P,\t--pacbio\tSpecified for Pacbio data."},
                 {NANOPORE,          0, "N", "nanopore",               Arg::None,     "\t-N,\t--nanopore\tSpecified for Nanopore data."},
-                {PROTOCOLS,         0,"p","protocols",                Arg::Required, "\t-p,\t--protocols\t Sequence protocols for corresponding to frags or a pure matrix, split with comma, hic, ngs, tenx, pacbio, nanopore, matrix is supported"},
+                {PROTOCOLS,         0,"p","protocols",                Arg::Required, "\t-p,\t--protocols\t Sequence protocols for corresponding to frags or a pure matrix, split with comma, hic, ngs, tenx, pacbio, nanopore, matrix, is supported"},
                 {WEIGHTS,         0,"m","weights",                Arg::Required, "\t-w,\t--weights\t Weights for each corresponding sequence protocols frags, split with comma, default 1"},
                 {_HYBRID,           0, "", "hybrid",                  Arg::None,     "\t--hybrid\tSpecified for hybrid data type."},
                 {_NEWFORMAT,        0, "", "new_format",              Arg::None,     "\t--new_format\tSpecified when using new_format with extractHair"},
@@ -213,8 +215,9 @@ int main(int argc, char *argv[])
         else if (token == PROTOCOL_PACBIO) OPERATIONS.push_back(MODE_PACBIO);
         else if (token == PROTOCOL_HYBRID) OPERATIONS.push_back(MODE_HYBRID);
         else if (token == PURE_MATRIX) OPERATIONS.push_back(MODE_MATRIX);
+        else if (token == READS_MATRIX) OPERATIONS.push_back(MODE_READ_MATRIX);
         else {
-            std::cerr << "SpecHap: Error, --protocols muste be split with comma, and only hic, ngs, tenx, pacbio and nanopore are supported\n";
+            std::cerr << "SpecHap: Error, --protocols must be split with comma, and only hic, ngs, tenx, pacbio， nanopore and reads_matrix are supported\n";
             exit(1);
         }
     }

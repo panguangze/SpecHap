@@ -143,11 +143,25 @@ void Spectral::reset()
         this->raw_count[i] = 0;
     }
     //    read graph
+    ViewMap reads_graph(raw_graph, n, n);
     ViewMap weighted_graph(raw_graph, n, n);
     CViewMap count_graph(raw_count, n, n);
     //    used for lst that large than window_size
     set_prev_buff(weighted_graph, count_graph);
     this->frag_buffer.clear();
+    // ADD: first find if reads matrix input
+    bool reads_info = false;
+    for (int i = 0; i < OPERATIONS.size(); i++){
+        auto item = OPERATIONS[i];
+        if (item == MODE_READ_MATRIX){
+            read_reads_matrix(i, reads_graph);
+            reads_info = true;
+        }
+
+    }
+
+    bool use_reads_info = false;
+    use_reads_info = use_reads_info || reads_info;
 
     for (int i = 0; i < OPERATIONS.size(); i++) {
         double w = this->fr_weights[i];
@@ -159,8 +173,16 @@ void Spectral::reset()
             read_fragment_10x(i,weighted_graph,count_graph);
         else if (item == MODE_HIC)
             read_fragment_hic(i,weighted_graph,count_graph);
-        else if (item == MODE_PE)
-            read_fragment(i,weighted_graph,count_graph, w);
+        else if (item == MODE_PE){
+            if (use_reads_info){
+                read_fragment_with_reads(i,weighted_graph,count_graph, w, reads_graph);
+                use_reads_info = false;
+
+            }
+            else
+                read_fragment(i,weighted_graph,count_graph, w);
+        }
+
         else if (item == MODE_NANOPORE)
             read_fragment_nanopore(i,weighted_graph,count_graph);
         else if (item == MODE_PACBIO)
@@ -256,6 +278,24 @@ void Spectral::read_fragment(int frIdx, ViewMap &weighted_graph, CViewMap &count
 //    cal_prob_matrix(weighted_graph, count_graph, nullptr, nullptr, nullptr);
 }
 
+// read fragment matrix with reads
+void Spectral::read_fragment_with_reads(int frIdx, ViewMap &weighted_graph, CViewMap &count_graph, double w, ViewMap &reads_graph)
+{
+    auto fr = frs[frIdx];
+//    this->frag_buffer.clear();
+    Fragment fragment;
+//    ViewMap weighed_graph(raw_graph, n, n);
+//    CViewMap count_graph(raw_count, n, n);
+    while (fr->get_next_pe(fragment))
+    {
+//        std::cout<<fragment.read_qual<<std::endl;
+        add_snp_edge_with_reads_matrix(fragment, weighted_graph, count_graph, w, reads_graph);
+        this->frag_buffer.push_back(fragment);
+        fragment.reset();
+    }
+//    cal_prob_matrix(weighted_graph, count_graph, nullptr, nullptr, nullptr);
+}
+
 void Spectral::read_fragment_10x(int frIdx, ViewMap &weighted_graph, CViewMap &count_graph)
 {
     auto fr = frs[frIdx];
@@ -281,7 +321,7 @@ void Spectral::read_fragment_10x(int frIdx, ViewMap &weighted_graph, CViewMap &c
             //add_barcode_info(fragment, barcode_linker);
         fragment.reset();
     }
-    add_snp_edge_barcode(weighted_graph, count_graph);
+    //add_snp_edge_barcode(weighted_graph, count_graph);
 //    cal_prob_matrix(weighted_graph, count_graph, nullptr, nullptr, nullptr);
 }
 
@@ -338,6 +378,7 @@ void Spectral::read_fragment_pacbio(int frIdx, ViewMap &weighted_graph, CViewMap
 //    cal_prob_matrix(weighted_graph, count_graph, nullptr, nullptr, nullptr);
 }
 
+//dddd
 void Spectral::read_fragment_matrix(int frIdx, ViewMap &weighted_graph, CViewMap &count_graph, double w){
     auto fr = frs[frIdx];
     std::vector<Fragment> frags;
@@ -350,8 +391,28 @@ void Spectral::read_fragment_matrix(int frIdx, ViewMap &weighted_graph, CViewMap
     {
         for (int i = 0; i < 4; i++) {
             Fragment &f = frags[i];
+            //dddd
             add_snp_edge(f, weighted_graph, count_graph,w);
             this->frag_buffer.push_back(frags[i]);
+            f.reset();
+        }
+    }
+}
+
+void Spectral::read_reads_matrix(int frIdx, ViewMap &reads_graph){
+    auto fr = frs[frIdx];
+    std::vector<Fragment> frags;
+    for (int i = 0; i < 4; i++) {
+        Fragment f;
+        frags.push_back(f);
+    }
+
+    while (fr->get_next_matrix(frags))
+    {
+        for (int i = 0; i < 4; i++) {
+            Fragment &f = frags[i];
+            //dddd
+            reads_matrix(i, f, reads_graph);
             f.reset();
         }
     }
@@ -443,6 +504,131 @@ void Spectral::add_snp_edge(Fragment &fragment, ViewMap &weighted_graph, CViewMa
             weighted_graph(2*a + 1, 2*b) += P_H2*w;
         }
     }
+}
+
+// if reads matrix is used
+void Spectral::add_snp_edge_with_reads_matrix(Fragment &fragment, ViewMap &weighted_graph, CViewMap &count_graph, double w, ViewMap &reads_graph)
+{
+    if (fragment.snps.empty())
+        return;
+
+    fragment.read_qual == 0 ? fragment.read_qual -= 1 : 0;
+    std::map<uint, std::pair<double,double> > block_supporting_likelyhood;
+    for (auto &i : fragment.snps) {
+        if (!phasing_window->in_range(i.first))
+            continue;
+        auto a = this->phasing_window->var_idx2mat_idx(i.first);
+        if (a < 0 or a >= this->variant_count)
+            continue;
+        uint blk_idx = this->phasing_window->mat_idx2var_idx(a);
+        ptr_PhasedBlock blk = this->phasing_window->blocks[blk_idx];
+        if (blk->results.count(i.first) == 0)
+            continue;
+        if (block_supporting_likelyhood.count(blk_idx) == 0)
+            block_supporting_likelyhood[blk_idx] = std::make_pair(0.0, 0.0);
+
+        if ((i.second.first == 0 && blk->results[i.first]->is_REF()) ||
+            (i.second.first == 1 && blk->results[i.first]->is_ALT())) {
+            if (fragment.getType() == FRAG_MATRIX) {
+//                Here, beacause the matrix format with count 00(11) twice
+                block_supporting_likelyhood[blk_idx].first += i.second.second / 2;
+                block_supporting_likelyhood[blk_idx].second += 0;
+            } else {
+                block_supporting_likelyhood[blk_idx].first += log10(i.second.second);
+                block_supporting_likelyhood[blk_idx].second += log10(1 - i.second.second);
+            }
+        } else {
+            if (fragment.getType() == FRAG_MATRIX) {
+                block_supporting_likelyhood[blk_idx].first += 0;
+                block_supporting_likelyhood[blk_idx].second += i.second.second / 2;
+            } else {
+                block_supporting_likelyhood[blk_idx].first += log10(1 - i.second.second);
+                block_supporting_likelyhood[blk_idx].second += log10(i.second.second);
+            }
+        }
+
+    }
+
+    for (auto &i : block_supporting_likelyhood)
+    {
+        auto a = this->phasing_window->var_idx2mat_idx(i.first);
+
+        for (auto &j : block_supporting_likelyhood)
+        {
+            auto b = this->phasing_window->var_idx2mat_idx(j.first);
+            if (a == b)
+                continue;
+            double P_H1, P_H2;
+            if (fragment.getType() == FRAG_MATRIX) {
+                if ((i.second.first != 0 && j.second.first != 0 ) || (i.second.second != 0 && j.second.second != 0)) {
+                    P_H1 = (i.second.first + j.second.first + i.second.second + j.second.second) / 2;
+                    P_H2 = 0;
+                } else {
+                    P_H1 = 0;
+                    P_H2 = (i.second.first + j.second.second + i.second.second + j.second.first) / 2;
+                }
+            } else {
+
+                P_H1 = cal_score((i.second.first + j.second.first)*reads_graph(2*a, 2*b), (i.second.second + j.second.second)*reads_graph(2*a+1, 2*b+1));
+                P_H2 = cal_score((i.second.first + j.second.second)*reads_graph(2*a, 2*b+1), (i.second.second + j.second.first)*reads_graph(2*a+1, 2*b));
+            }
+//            double P_H1 = cal_score(i.second.first + j.second.first, i.second.second + j.second.second);
+//            double P_H2 = cal_score(i.second.first + j.second.second, i.second.second + j.second.first);
+            if (P_H2 == P_H1)
+                continue;
+            double score = abs(P_H1 - P_H2);
+            int connection;
+            P_H1 > P_H2 ? connection = 0 : connection = 1;
+            //connection == 0 ? variant_graph.add_edge(a, b, true) : variant_graph.add_edge(a, b, false);
+
+            //weighted_graph(2*a, 2*b + connection) += score;
+            //weighted_graph(2*a + 1, 2*b + 1 - connection) += score;
+            //count_graph(2 * a, 2 * b + connection) ++;
+            //count_graph(2 * a + 1, 2 * b + 1 - connection) ++;
+
+            weighted_graph(2*a, 2*b) += P_H1*w;
+            weighted_graph(2*a + 1, 2*b + 1) += P_H1*w;
+            weighted_graph(2*a, 2*b + 1) += P_H2*w;
+            weighted_graph(2*a + 1, 2*b) += P_H2*w;
+        }
+    }
+}
+
+// read the reads matrix to delete some reads
+void Spectral::reads_matrix(int idx, Fragment &fragment, ViewMap &reads_graph)
+{
+    if (fragment.snps.empty())
+        return;
+
+    fragment.read_qual == 0 ? fragment.read_qual -= 1 : 0;
+
+    auto snp = fragment.snps[0];
+    if (!phasing_window->in_range(snp.first))
+        return;
+    auto a = this->phasing_window->var_idx2mat_idx(snp.first);
+    auto b = a - 1;
+
+    if (idx == 0){
+        reads_graph(2*a, 2*b) = snp.second.second;
+        reads_graph(2*b, 2*a) = snp.second.second;
+    }
+
+    else if(idx == 2){
+        reads_graph(2*a + 1, 2*b + 1) = snp.second.second;
+        reads_graph(2*b + 1, 2*a + 1) = snp.second.second;
+    }
+
+    else if(idx == 1){
+        reads_graph(2*a, 2*b + 1) = snp.second.second;
+        reads_graph(2*b+1, 2*a) = snp.second.second;
+    }
+
+    else if(idx == 3){
+        reads_graph(2*a + 1, 2*b) = snp.second.second;
+        reads_graph(2*b, 2*a + 1) = snp.second.second;
+    }
+
+
 }
 
 void Spectral::add_snp_edge_barcode(ViewMap &weighted_graph, CViewMap &count_graph)

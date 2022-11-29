@@ -1,0 +1,2 @@
+/usr/local/bin/SpecHap
+/usr/local/bin/BarcodeExtract

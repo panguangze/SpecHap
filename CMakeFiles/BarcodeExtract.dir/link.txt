@@ -1,0 +1,1 @@
+/usr/bin/g++   -O0 -Wall -ggdb -fkeep-inline-functions   CMakeFiles/BarcodeExtract.dir/barcode_extractor/BAMReader.cpp.o CMakeFiles/BarcodeExtract.dir/barcode_extractor/Barcode.cpp.o CMakeFiles/BarcodeExtract.dir/barcode_extractor/main.cpp.o CMakeFiles/BarcodeExtract.dir/barcode_extractor/worker.cpp.o  -o BarcodeExtract  -lhts 

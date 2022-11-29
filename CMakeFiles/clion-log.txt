@@ -1,0 +1,31 @@
+C:\Windows\system32\wsl.exe --distribution Ubuntu-20.04 --exec /bin/bash -c "export CMAKE_COLOR_DIAGNOSTICS=ON && export CLION_IDE=TRUE && export JETBRAINS_IDE=TRUE && cd /mnt/c/Users/lijiache2/Desktop/SpecHap && /usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G 'CodeBlocks - Unix Makefiles' -S /mnt/c/Users/lijiache2/Desktop/SpecHap -B /mnt/c/Users/lijiache2/Desktop/SpecHap; exitcode=$?; sleep 0.001; (exit $exitcode)"
+-- Found HTSlib  : /usr/local/lib/libhts.so
+--    HTSlib include dirs: /usr/local/include/htslib
+--    HTSlib libraries: /usr/local/lib/libhts.so
+CMake Warning at cmake/Modules/LibFindMacros.cmake:263 (message):
+  WARNING: MISSING PACKAGE
+
+  We only found some files of ARPACK, not all of them.  Perhaps your
+  installation is incomplete or maybe we just didn't look in the right place?
+  This package is NOT REQUIRED and you may ignore this warning but by doing
+  so you may miss some functionality of SpecHap.
+
+  Relevant CMake configuration variables:
+
+    ARPACK_INCLUDE_DIR=/usr/include/arpack
+    ARPACK_LIBRARY=<not found>
+
+  You may use CMake GUI, cmake -D or ccmake to modify the values.  Delete
+  CMakeCache.txt to discard all values and force full re-detection if
+  necessary.
+
+Call Stack (most recent call first):
+  cmake/Modules/Findarpack.cmake:42 (libfind_process)
+  CMakeLists.txt:19 (find_package)
+
+
+--    ARPACK include dirs: 
+--    ARPACK libraries: 
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /mnt/c/Users/lijiache2/Desktop/SpecHap

@@ -32,6 +32,7 @@ typedef std::vector<snp_info> snp_container;
 #define MODE_NANOPORE   4
 #define MODE_MATRIX     5
 #define MODE_HYBRID     6
+#define MODE_READ_MATRIX 7
 class Fragment
 {
 public:

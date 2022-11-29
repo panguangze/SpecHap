@@ -1,0 +1,8 @@
+/mnt/c/Users/lijiache2/Desktop/SpecHap/CMakeFiles/install/strip.dir
+/mnt/c/Users/lijiache2/Desktop/SpecHap/CMakeFiles/install/local.dir
+/mnt/c/Users/lijiache2/Desktop/SpecHap/CMakeFiles/install.dir
+/mnt/c/Users/lijiache2/Desktop/SpecHap/CMakeFiles/list_install_components.dir
+/mnt/c/Users/lijiache2/Desktop/SpecHap/CMakeFiles/rebuild_cache.dir
+/mnt/c/Users/lijiache2/Desktop/SpecHap/CMakeFiles/edit_cache.dir
+/mnt/c/Users/lijiache2/Desktop/SpecHap/CMakeFiles/BarcodeExtract.dir
+/mnt/c/Users/lijiache2/Desktop/SpecHap/CMakeFiles/SpecHap.dir
