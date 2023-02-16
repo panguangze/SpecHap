@@ -132,6 +132,7 @@ void Phaser::phasing()
         if (frvcf->jump_to_contig(rid) != 0)
             break;
 
+
         ChromoPhaser *chromo_phaser = new ChromoPhaser(rid, frvcf->contigs[rid], WINDOW_OVERLAP, WINDOW_SIZE);
         std::string mess = "phasing haplotype for " + std::string(frvcf->contigs[rid]);
         logging(std::cerr, mess);
@@ -140,6 +141,9 @@ void Phaser::phasing()
         else
             load_contig_records(chromo_phaser);
         chromo_phaser->construct_phasing_window_initialize();
+        if (chromo_phaser->chr_name == "chr11") {
+            int ttt = 2;
+        }
         for (auto item : frfrags) {
             item->set_prev_chr_var_count(prev_variant_count);
         }
@@ -157,6 +161,7 @@ void Phaser::phasing()
             phasing_by_chrom(chromo_phaser->variant_count, chromo_phaser);
             fwvcf->write_nxt_contigs(frvcf->contigs[rid].data(), chromo_phaser, *frvcf, spectral->getBreakIdxs());
         }
+        std::cout<<chromo_phaser->chr_name<<std::endl;
 
         //write vcf
         prev_variant_count += chromo_phaser->variant_count;

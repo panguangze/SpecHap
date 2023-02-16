@@ -82,7 +82,7 @@ bool FragmentReader::get_next_pe(Fragment &fragment)
         tokenize(line, this->buffer, " ", true);
         //EOF
         auto token_size = buffer.size();
-        if (buffer.back() == "SV") {
+        if (buffer.back() == "SV" || buffer.back() == "SV_REF") {
             token_size = buffer.size() - 1;
         }
         if (token_size < 2)
@@ -129,7 +129,7 @@ bool FragmentReader::get_next_pe(Fragment &fragment)
         if (name == "SRR5115029.143545") {
             auto tmp = 33;
         }
-        if (buffer.back() == "SV") {
+        if (buffer.back() == "SV" || buffer.back() == "SV_REF") {
 //            std::cout<<this->buffer[buffer.size() - 2]<<line<<std::endl;
             fragment.read_qual = std::stod(this->buffer[buffer.size() - 2]) / -10;
         } else {
@@ -184,7 +184,7 @@ bool FragmentReader::get_next_tenx(Fragment &fragment)
         //EOF
 
         auto token_size = buffer.size();
-        if (buffer.back() == "SV") {
+        if (buffer.back() == "SV" || buffer.back() == "SV_REF") {
             token_size = buffer.size() - 1;
         }
         if (token_size < 2)
@@ -279,7 +279,7 @@ bool FragmentReader::get_next_hic(Fragment &fragment)
         tokenize(line, this->buffer, " ", true);
         //EOF
         auto token_size = buffer.size();
-        if (buffer.back() == "SV") {
+        if (buffer.back() == "SV" || buffer.back() == "SV_REF") {
             token_size = buffer.size() - 1;
         }
         if (token_size < 2)
@@ -328,7 +328,7 @@ bool FragmentReader::get_next_hic(Fragment &fragment)
             this->nxt_window_set = true;
         }
 
-        if (buffer.back() == "SV") {
+        if (buffer.back() == "SV" || buffer.back() == "SV_REF") {
             fragment.read_qual = std::stod(this->buffer[buffer.size() - 2]) / -10;
         } else {
             fragment.read_qual = std::stod(this->buffer.back()) / -10;
@@ -383,7 +383,7 @@ bool FragmentReader::get_next_nanopore(Fragment &fragment)
         tokenize(line, this->buffer, " ", true);
         //EOF
         auto token_size = buffer.size();
-        if (buffer.back() == "SV") {
+        if (buffer.back() == "SV" || buffer.back() == "SV_REF") {
             token_size = buffer.size() - 1;
         }
         if (token_size < 2)
@@ -430,7 +430,7 @@ bool FragmentReader::get_next_nanopore(Fragment &fragment)
         }
 
 
-        if (buffer.back() == "SV") {
+        if (buffer.back() == "SV" || buffer.back() == "SV_REF") {
             fragment.read_qual = std::stod(this->buffer[buffer.size() - 2]) / -10;
         } else {
             fragment.read_qual = std::stod(this->buffer.back()) / -10;
@@ -486,7 +486,7 @@ bool FragmentReader::get_next_pacbio(Fragment &fragment)
         tokenize(line, this->buffer, " ", true);
         //EOF
         auto token_size = buffer.size();
-        if (buffer.back() == "SV") {
+        if (buffer.back() == "SV" || buffer.back() == "SV_REF") {
             token_size = buffer.size() - 1;
         }
         
@@ -532,7 +532,7 @@ bool FragmentReader::get_next_pacbio(Fragment &fragment)
             this->nxt_window_set = true;
         }
 
-        if (buffer.back() == "SV") {
+        if (buffer.back() == "SV" || buffer.back() == "SV_REF") {
             fragment.read_qual = std::stod(this->buffer[buffer.size() - 2]) / -10;
         } else {
             fragment.read_qual = std::stod(this->buffer.back()) / -10;
@@ -690,7 +690,7 @@ bool FragmentReader::get_next_hybrid(Fragment &fragment)
         tokenize(line, this->buffer, " ", true);
         //EOF
         auto token_size = buffer.size();
-        if (buffer.back() == "SV") {
+        if (buffer.back() == "SV" || buffer.back() == "SV_REF") {
             token_size = buffer.size() - 1;
         }
         if (token_size < estimated_buffer_len)
@@ -762,7 +762,7 @@ bool FragmentReader::get_next_hybrid(Fragment &fragment)
             this->nxt_window_set = true;
         }
 
-        if (buffer.back() == "SV") {
+        if (buffer.back() == "SV" || buffer.back() == "SV_REF") {
             fragment.read_qual = std::stod(this->buffer[buffer.size() - 2]) / -10;
         } else {
             fragment.read_qual = std::stod(this->buffer.back()) / -10;
