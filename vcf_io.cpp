@@ -229,8 +229,10 @@ void VCFWriter::write_nxt_record(bcf1_t *record, ptr_ResultforSingleVariant resu
     int32_t *ptr = gt_arr;
     int allele0 = bcf_gt_allele(ptr[2*SIDX]);
     int allele1 = bcf_gt_allele(ptr[2*SIDX+1]);
+    allele0 = std::min(allele1,allele0);
+    allele1 = std::max(allele1, allele0);
     int temp = bcf_alleles2gt(allele0, allele1);;
-    bcf_gt2alleles(SIDX, &ref, &alt);
+    bcf_gt2alleles(temp, &ref, &alt);
     ref = allele0;
     alt = allele1;
 //    ref = allele0;
