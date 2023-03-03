@@ -123,7 +123,7 @@ public:
         nps = bcf_get_format_int32(header ,buffer, "PS", &ps_s, &ps);
         buffer->qual == NAN ? result->qual = 40 : result->qual = buffer->qual;
         result->pos = buffer->pos;
-        if (buffer->pos == 126330351) {
+        if (buffer->pos == 714324 || buffer->pos == 714323) {
             int tmp = 33;
         }
         dps == nullptr ? result->dp = 30 : result->dp = dps[SIDX];

@@ -218,7 +218,7 @@ VCFWriter::~VCFWriter()
 
 void VCFWriter::write_nxt_record(bcf1_t *record, ptr_ResultforSingleVariant resultforSingleVariant, const unsigned int blk_no)
 {
-    if (record->pos == 126330351) {
+    if (record->pos == 876385 || record->pos == 876384 ) {
         int tmp = 33;
     }
     const char * filter = filter_map.find(resultforSingleVariant->get_filter())->second.data();
@@ -230,7 +230,9 @@ void VCFWriter::write_nxt_record(bcf1_t *record, ptr_ResultforSingleVariant resu
     int allele0 = bcf_gt_allele(ptr[2*SIDX]);
     int allele1 = bcf_gt_allele(ptr[2*SIDX+1]);
     int temp = bcf_alleles2gt(allele0, allele1);;
-    bcf_gt2alleles(temp, &ref, &alt);
+    bcf_gt2alleles(SIDX, &ref, &alt);
+    ref = allele0;
+    alt = allele1;
 //    ref = allele0;
 //    alt = allele1;
     for(int i = 0; i < ngt_arr; i++) {
