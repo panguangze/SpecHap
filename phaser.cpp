@@ -152,7 +152,7 @@ void Phaser::phasing()
         if (!contigs.empty() && (std::find(contigs.begin(), contigs.end(), frvcf->contigs[rid]) == contigs.end())) {
             std::string mess = " skipp " + std::string(frvcf->contigs[rid]);
             logging(std::cerr, mess);
-            continue;
+//            continue;
 //            fwvcf->write_nxt_contigs(frvcf->contigs[rid].data(), chromo_phaser, *frvcf,spectral->getBreakIdxs());
 //            prev_variant_count += chromo_phaser->variant_count;
 //            spectral->release_chromo_phaser();
