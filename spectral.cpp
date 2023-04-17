@@ -774,11 +774,11 @@ void Spectral::solver()
     this->offset += this->chromo_phaser->intended_window_size;
 
 //    TODO, if we need this
-//    if (HAS_TENX)
-//    {
-//        for (auto start_idx: this->phased_block_starts)
-//            barcode_aware_filter(start_idx.first);
-//    }
+    if (HAS_TENX)
+    {
+        for (auto start_idx: this->phased_block_starts)
+            barcode_aware_filter(start_idx.first);
+    }
 
 //    split_phased_blk(2);
 
@@ -1371,6 +1371,8 @@ void Spectral::barcode_aware_filter(uint block_start_idx)
 {
     std::set<uint> filtered_idx;
     ptr_PhasedBlock phased_block = phasing_window->blocks[block_start_idx];
+    if (phased_block == nullptr)
+        return;
     // Notice that after phasing, every barcode provides support for at most one block
     BarcodeLinker::iterator iter;
     this->barcode_linker_index_set ? iter = this->barcode_linker->barcodes.find(this->barcode_index) : iter = this->barcode_linker->barcodes.begin();
