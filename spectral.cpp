@@ -717,7 +717,7 @@ void Spectral::solver()
         auto tm3 = this->adjacency_matrix(2 * k, 2 * j + 1);
         double score = this->adjacency_matrix(2 * k, 2 * j) - this->adjacency_matrix(2 * k, 2 * j + 1);
         if (CHECK_SCORE) {
-            if (((score > 0 && score < 6) || (score < 0 && score > -6))) {
+            if (((score > 0 && score < 5) || (score < 0 && score > -5))) {
 //                split_phased_blk(i);
 //                auto blk_no = chromo_phaser->variant_to_block_id
                 auto break_idx = this->phasing_window->mat_idx2var_idx(j);
@@ -774,11 +774,11 @@ void Spectral::solver()
     this->offset += this->chromo_phaser->intended_window_size;
 
 //    TODO, if we need this
-    if (HAS_TENX)
-    {
-        for (auto start_idx: this->phased_block_starts)
-            barcode_aware_filter(start_idx.first);
-    }
+//    if (HAS_TENX)
+//    {
+//        for (auto start_idx: this->phased_block_starts)
+//            barcode_aware_filter(start_idx.first);
+//    }
 
 //    split_phased_blk(2);
 
