@@ -75,9 +75,11 @@ bool FragmentReader::get_next_pe(Fragment &fragment)
 
         std::string line;
         this->buffer.clear();
-
-        if (!std::getline(this->frag_file, line))
+        if (!this->frag_file.eof())
             return false;
+//        if (!std::getline(this->frag_file, line))
+//            return false;
+        std::getline(this->frag_file, line);
 
         tokenize(line, this->buffer, " ", true);
         //EOF
@@ -178,8 +180,11 @@ bool FragmentReader::get_next_tenx(Fragment &fragment)
 
         this->buffer.clear();
 
-        if (!std::getline(this->frag_file, line))
+        if (!this->frag_file.eof())
             return false;
+//        if (!std::getline(this->frag_file, line))
+//            return false;
+        std::getline(this->frag_file, line);
         tokenize(line, this->buffer, " ", true);
         //EOF
 
@@ -271,11 +276,14 @@ bool FragmentReader::get_next_hic(Fragment &fragment)
     std::string line;
     try
     {
+        if(!this->frag_file) throw std::ios_base::failure(std::strerror(errno));
         std::fstream::streampos curr_pos = this->tell();
         this->buffer.clear();
-
-        if (!std::getline(this->frag_file, line))
+        if (!this->frag_file.eof())
             return false;
+//        if (!std::getline(this->frag_file, line))
+//            return false;
+        std::getline(this->frag_file, line);
         tokenize(line, this->buffer, " ", true);
         //EOF
         auto token_size = buffer.size();
@@ -378,8 +386,11 @@ bool FragmentReader::get_next_nanopore(Fragment &fragment)
 
         this->buffer.clear();
 
-        if (!std::getline(this->frag_file, line))
+        if (!this->frag_file.eof())
             return false;
+//        if (!std::getline(this->frag_file, line))
+//            return false;
+        std::getline(this->frag_file, line);
         tokenize(line, this->buffer, " ", true);
         //EOF
         auto token_size = buffer.size();
@@ -481,8 +492,11 @@ bool FragmentReader::get_next_pacbio(Fragment &fragment)
 
         this->buffer.clear();
 
-        if (!std::getline(this->frag_file, line))
+        if (!this->frag_file.eof())
             return false;
+//        if (!std::getline(this->frag_file, line))
+//            return false;
+        std::getline(this->frag_file, line);
         tokenize(line, this->buffer, " ", true);
         //EOF
         auto token_size = buffer.size();
@@ -576,8 +590,11 @@ bool FragmentReader::get_next_matrix(std::vector<Fragment>& frags) {
 
         this->buffer.clear();
 
-        if (!std::getline(this->frag_file, line))
+        if (!this->frag_file.eof())
             return false;
+//        if (!std::getline(this->frag_file, line))
+//            return false;
+        std::getline(this->frag_file, line);
         tokenize(line, this->buffer, " ", true);
         //EOF
         auto token_size = buffer.size();
@@ -684,8 +701,11 @@ bool FragmentReader::get_next_hybrid(Fragment &fragment)
         std::string line;
         this->buffer.clear();
 
-        if (!std::getline(this->frag_file, line))
+        if (!this->frag_file.eof())
             return false;
+//        if (!std::getline(this->frag_file, line))
+//            return false;
+        std::getline(this->frag_file, line);
 
         tokenize(line, this->buffer, " ", true);
         //EOF
