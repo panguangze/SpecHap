@@ -75,7 +75,7 @@ bool FragmentReader::get_next_pe(Fragment &fragment)
 
         std::string line;
         this->buffer.clear();
-        if (!this->frag_file.eof())
+        if (this->frag_file.eof())
             return false;
 //        if (!std::getline(this->frag_file, line))
 //            return false;
@@ -180,7 +180,7 @@ bool FragmentReader::get_next_tenx(Fragment &fragment)
 
         this->buffer.clear();
 
-        if (!this->frag_file.eof())
+        if (this->frag_file.eof())
             return false;
 //        if (!std::getline(this->frag_file, line))
 //            return false;
@@ -279,7 +279,7 @@ bool FragmentReader::get_next_hic(Fragment &fragment)
         if(!this->frag_file) throw std::ios_base::failure(std::strerror(errno));
         std::fstream::streampos curr_pos = this->tell();
         this->buffer.clear();
-        if (!this->frag_file.eof())
+        if (this->frag_file.eof())
             return false;
 //        if (!std::getline(this->frag_file, line))
 //            return false;
@@ -386,7 +386,7 @@ bool FragmentReader::get_next_nanopore(Fragment &fragment)
 
         this->buffer.clear();
 
-        if (!this->frag_file.eof())
+        if (this->frag_file.eof())
             return false;
 //        if (!std::getline(this->frag_file, line))
 //            return false;
@@ -492,7 +492,7 @@ bool FragmentReader::get_next_pacbio(Fragment &fragment)
 
         this->buffer.clear();
 
-        if (!this->frag_file.eof())
+        if (this->frag_file.eof())
             return false;
 //        if (!std::getline(this->frag_file, line))
 //            return false;
@@ -590,7 +590,7 @@ bool FragmentReader::get_next_matrix(std::vector<Fragment>& frags) {
 
         this->buffer.clear();
 
-        if (!this->frag_file.eof())
+        if (this->frag_file.eof())
             return false;
 //        if (!std::getline(this->frag_file, line))
 //            return false;
@@ -701,7 +701,7 @@ bool FragmentReader::get_next_hybrid(Fragment &fragment)
         std::string line;
         this->buffer.clear();
 
-        if (!this->frag_file.eof())
+        if (this->frag_file.eof())
             return false;
 //        if (!std::getline(this->frag_file, line))
 //            return false;
@@ -821,10 +821,14 @@ BEDReader::BEDReader(const char *in)
 
 BEDReader::~BEDReader()
 {
-    hts_close(inf);
-    free(tmp.s);
-    tbx_destroy(tbx);
-    hts_itr_destroy(iter);
+    if (inf != nullptr)
+        hts_close(inf);
+    if (tmp.m != 0)
+        free(tmp.s);
+    if(tbx != nullptr)
+        tbx_destroy(tbx);
+    if (iter != nullptr)
+        hts_itr_destroy(iter);
 }
 
 int BEDReader::jump_to_region(const char *chromo, uint32_t begin, uint32_t end)
