@@ -52,7 +52,8 @@ Phaser::~Phaser()
     frfrags.shrink_to_fit();
     delete spectral;
     if (frbed != nullptr)
-        delete frbed;
+        std::cout<<"xxxxxx"<<std::endl;
+    delete frbed;
 }
 
 
