@@ -18,6 +18,7 @@ Phaser::Phaser(const std::string &fnvcf, const std::string &fnout, std::vector<s
         auto item = fnfrags[i];
         frfrags.push_back(new FragmentReader(item.data()));
         if(OPERATIONS[i] == MODE_10X) {
+            std::cout << "10X mode" << std::endl;
             frbed = new BEDReader(fnbed.c_str());
         }
     }
