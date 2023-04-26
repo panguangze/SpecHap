@@ -76,11 +76,12 @@ void print_hap(ptr_PhasedBlock &block, uint idx)
 Spectral::Spectral(std::vector<FragmentReader *>& frfrags, std::vector<double>& fr_weights, BEDReader *frbed, double threhold, int coverage, bool use_secondary)
         :use_secondary(use_secondary), raw_graph(nullptr), raw_count(nullptr), threhold(threhold), epsilon(10e-2),
         coverage(coverage), q_aver(0.0),
-        q_sum(0.0), barcode_linker(nullptr), barcode_linker_index_set(false), frbed(frbed), phasing_window(nullptr), chromo_phaser(nullptr)
+        q_sum(0.0), barcode_linker(nullptr), barcode_linker_index_set(false), phasing_window(nullptr), chromo_phaser(nullptr)
 {
     for (auto item : frfrags) {
         frs.push_back(item);
     }
+    this->frbed = frbed;
     block_no = 1;
     this->barcode_linker = new BarcodeLinkers(MAX_BARCODE_SPANNING);
     this->region_frag_stats = new RegionFragStats();
