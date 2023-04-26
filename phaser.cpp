@@ -49,7 +49,8 @@ Phaser::~Phaser()
     frfrags.clear();
     frfrags.shrink_to_fit();
     delete spectral;
-    delete frbed;
+    if (frbed != nullptr)
+        delete frbed;
 }
 
 
