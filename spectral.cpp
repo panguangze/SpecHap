@@ -249,6 +249,7 @@ void Spectral::read_fragment(int frIdx, ViewMap &weighted_graph, CViewMap &count
 //    CViewMap count_graph(raw_count, n, n);
     while (fr->get_next_pe(fragment))
     {
+        if (fragment.snps.empty()) continue;
 //        std::cout<<fragment.read_qual<<std::endl;
         add_snp_edge(fragment, weighted_graph, count_graph, w);
         this->frag_buffer.push_back(fragment);
