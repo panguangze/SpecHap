@@ -307,7 +307,7 @@ void VCFWriter::write_nxt_record(bcf1_t *record, ptr_ResultforSingleVariant resu
 
     bcf1_t *record_w = bcf_dup(record);
     //bcf_unpack(record_w, BCF_UN_ALL);
-    int rr = bcf_write(this->fp, this->header, record_w);
+    int rr = bcf_write(this->fp, this->header, record);
     bcf_destroy(record_w);
     free(gt_arr);
 }
@@ -329,7 +329,7 @@ void VCFWriter::write_nxt_contigs(const char *contig, ChromoPhaser *chromo_phase
         idx2pos[idx] = record->pos + 1;
         ptr_ResultforSingleVariant resultforSingleVariant = chromo_phaser->results_for_variant[idx];
         bcf_translate(this->header, frvcf.header, record);
-        if (record->pos == 4565) {
+        if (record->pos == 1029627) {
             auto tmp = 44;
         }
         if (!is_uninitialized(resultforSingleVariant->block) && resultforSingleVariant->variant_phased() && resultforSingleVariant->get_filter() == filter_type::PASS)
