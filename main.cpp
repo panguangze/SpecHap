@@ -27,7 +27,7 @@ bool HAS_HIC;
 bool HAS_TENX;
 int SIDX;
 std::vector<int> OPERATIONS;
-bool CHECK_SCORE= true;
+bool CHECK_SCORE= false;
 
 enum optionIndex
 {
