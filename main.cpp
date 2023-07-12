@@ -93,7 +93,7 @@ const option::Descriptor usage[] =
                 {_BASEOFFSET,       0, "", "base_offset",             Arg::Numeric,  "\t--base_offset\tQuality of set for read base, default is 33."},
                 {_KEEP_PHASING_INFO,0, "", "keep_phasing_info",       Arg::None,     "\t--keep_phasing_info\tSpecified when trying to keep previous phasing info"},
                 {IDX,0, "", "idx",       Arg::Numeric,     "\t--idx\tSample idx in vcf file"},
-                {_NO_CHECK_SORE,0, "", "ncs",       Arg::None,     "\t--ncs\tSpechap will not filter out phasing edge with reads support situation"},
+                {_NO_CHECK_SORE,0, "", "ncs",       Arg::None,     "\t--ncs\tSpechap will filter out phasing edge with reads support situation"},
                 {0,           0,   0,          0,               0,   0 }
         };
 
@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
     if (options[_KEEP_PHASING_INFO])
         KEEP_PS = true;
     if (options[_NO_CHECK_SORE])
-        CHECK_SCORE = false;
+        CHECK_SCORE = true;
     if (options[_WINDOW_OVERLAP].arg != nullptr)
         WINDOW_OVERLAP = int(atoi(options[_WINDOW_OVERLAP].arg));
     if (options[_WINDOW_SIZE].arg != nullptr)
