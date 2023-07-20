@@ -601,15 +601,19 @@ void Spectral::cal_prob_matrix(ViewMap &weighted_graph, CViewMap &count_graph, G
             //adj_mat(i, j)  = abs(log10(weighted_graph(i, j)));
             //the connection provides no sufficient information for phasing
             auto tm1 = weighted_graph(2 * i, 2*j);
+            auto tm2 = weighted_graph(2*i+1, 2*j);
             auto tm3 = weighted_graph(2*i, 2*j+1);
+            auto tm4 = weighted_graph(2*i+1, 2*j+1);
+
             double score = weighted_graph(2 * i, 2*j) - weighted_graph(2*i, 2*j+1);
             bool score_flag = false;
-            if (tm1 != 0 && tm3 != 0){
+            if (tm1 != 0 && tm2 != 0){
                 score_flag = true;
             }
             if (score > 0)
             {
                 if (CHECK_SCORE && score_flag && score < 1) {
+                    int tmp = 0 ;
 //                    no
                 } else {
                     adj_mat(2*i, 2*j) = adj_mat(2*i + 1, 2 * j + 1) = score;
