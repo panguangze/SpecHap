@@ -603,23 +603,35 @@ void Spectral::cal_prob_matrix(ViewMap &weighted_graph, CViewMap &count_graph, G
             auto tm1 = weighted_graph(2 * i, 2*j);
             auto tm3 = weighted_graph(2*i, 2*j+1);
             double score = weighted_graph(2 * i, 2*j) - weighted_graph(2*i, 2*j+1);
+            bool score_flag = false;
+            if (tm1 != 0 && tm3 != 0){
+                score_flag = true;
+            }
             if (score > 0)
             {
-                adj_mat(2*i, 2*j) = adj_mat(2*i + 1, 2 * j + 1) = score;
-                adj_mat(2*i, 2*j + 1) = adj_mat(2*i + 1, 2 * j) = 0;
-                count_graph(2*i, 2*j) ++;
-                count_graph(2*i + 1, 2*j + 1) ++;
-                var_graph.add_edge(i, j, true);
+                if (CHECK_SCORE && score_flag && score < 1) {
+//                    no
+                } else {
+                    adj_mat(2*i, 2*j) = adj_mat(2*i + 1, 2 * j + 1) = score;
+                    adj_mat(2*i, 2*j + 1) = adj_mat(2*i + 1, 2 * j) = 0;
+                    count_graph(2*i, 2*j) ++;
+                    count_graph(2*i + 1, 2*j + 1) ++;
+                    var_graph.add_edge(i, j, true);
+                }
                 
             }
             else if (score < 0)
             {
-                adj_mat(2*i, 2*j) = adj_mat(2*i + 1, 2 * j + 1) = 0;
-                adj_mat(2*i, 2*j + 1) = adj_mat(2*i + 1, 2 * j) = -1 * score;
-                count_graph(2*i, 2*j + 1) ++;
-                count_graph(2*i + 1, 2*j) ++;
-                var_graph.add_edge(i, j, false);
-                //var_graph.add_edge(i, j, true);
+                if (CHECK_SCORE && score_flag && score > -1) {
+//                    no
+                } else {
+                    adj_mat(2 * i, 2 * j) = adj_mat(2 * i + 1, 2 * j + 1) = 0;
+                    adj_mat(2 * i, 2 * j + 1) = adj_mat(2 * i + 1, 2 * j) = -1 * score;
+                    count_graph(2 * i, 2 * j + 1)++;
+                    count_graph(2 * i + 1, 2 * j)++;
+                    var_graph.add_edge(i, j, false);
+                    //var_graph.add_edge(i, j, true);
+                }
             }
 
             else
@@ -718,14 +730,14 @@ void Spectral::solver()
         auto tm1 = this->adjacency_matrix(2 * k, 2 * j);
         auto tm3 = this->adjacency_matrix(2 * k, 2 * j + 1);
         double score = this->adjacency_matrix(2 * k, 2 * j) - this->adjacency_matrix(2 * k, 2 * j + 1);
-        if (CHECK_SCORE) {
-            if (((score > 0 && score < 5) || (score < 0 && score > -5))) {
-//                split_phased_blk(i);
-//                auto blk_no = chromo_phaser->variant_to_block_id
-                auto break_idx = this->phasing_window->mat_idx2var_idx(j);
-                this->setBlkIdx(break_idx);
-            }
-        }
+//        if (CHECK_SCORE) {
+//            if (((score > 0 && score < 5) || (score < 0 && score > -5))) {
+////                split_phased_blk(i);
+////                auto blk_no = chromo_phaser->variant_to_block_id
+//                auto break_idx = this->phasing_window->mat_idx2var_idx(j);
+//                this->setBlkIdx(break_idx);
+//            }
+//        }
 //        }
     }
     for (auto i : phasing_window->current_window_idxes)
