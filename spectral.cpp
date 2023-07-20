@@ -612,7 +612,7 @@ void Spectral::cal_prob_matrix(ViewMap &weighted_graph, CViewMap &count_graph, G
             }
             if (score > 0)
             {
-                if (CHECK_SCORE && score_flag && score < 1) {
+                if (CHECK_SCORE && score_flag && score < 2) {
                     int tmp = 0 ;
 //                    no
                 } else {
@@ -626,7 +626,7 @@ void Spectral::cal_prob_matrix(ViewMap &weighted_graph, CViewMap &count_graph, G
             }
             else if (score < 0)
             {
-                if (CHECK_SCORE && score_flag && score > -1) {
+                if (CHECK_SCORE && score_flag && score > -2) {
 //                    no
                 } else {
                     adj_mat(2 * i, 2 * j) = adj_mat(2 * i + 1, 2 * j + 1) = 0;
