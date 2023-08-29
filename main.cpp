@@ -11,6 +11,7 @@
 #define PROTOCOL_TENX "tenx"
 #define PROTOCOL_PACBIO "pacbio"
 #define PROTOCOL_NANOPORE "nanopore"
+#define PROTOCOL_ONT "ont"
 #define PURE_MATRIX "matrix"
 #define PROTOCOL_HYBRID "hybrid"
 bool HYBRID = false;
@@ -212,6 +213,7 @@ int main(int argc, char *argv[])
             OPERATIONS.push_back(MODE_10X);
             fnbed = options[STATS].arg;
         } else if (token == PROTOCOL_NANOPORE) OPERATIONS.push_back(MODE_NANOPORE);
+        else if (token == PROTOCOL_ONT) OPERATIONS.push_back(MODE_NANOPORE);
         else if (token == PROTOCOL_PACBIO) OPERATIONS.push_back(MODE_PACBIO);
         else if (token == PROTOCOL_HYBRID) OPERATIONS.push_back(MODE_HYBRID);
         else if (token == PURE_MATRIX) OPERATIONS.push_back(MODE_MATRIX);

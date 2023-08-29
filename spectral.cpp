@@ -300,7 +300,7 @@ void Spectral::read_fragment_hic(int frIdx, ViewMap &weighted_graph, CViewMap &c
         add_snp_edge(fragment, weighted_graph, count_graph,1);
         this->frag_buffer.push_back(fragment);
         if ( fragment.snps[0].first >= phasing_window->prev_window_start)
-            if (fragment.insertion_size >= 5000 && fragment.insertion_size <= 40000000)
+            if (fragment.insertion_size >= 5000 && fragment.insertion_size <= 400000000)
                 this->hic_linker_container.add_HiC_info(fragment);
         fragment.reset();
     }

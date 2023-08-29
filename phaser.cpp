@@ -31,7 +31,8 @@ Phaser::Phaser(const std::string &fnvcf, const std::string &fnout, std::vector<s
 //        frbed = new BEDReader(fnbed.data());
 
     bool use_secondary = false;
-    threshold = 1e-5;
+    //threshold = 1e-5;
+    threshold = 0.01;
 //    threshold = 0;
 
     spectral = new Spectral(frfrags, fr_weights, frbed, threshold, coverage, use_secondary);
