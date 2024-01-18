@@ -31,8 +31,8 @@ Phaser::Phaser(const std::string &fnvcf, const std::string &fnout, std::vector<s
 //        frbed = new BEDReader(fnbed.data());
 
     bool use_secondary = false;
-    //threshold = 1e-5;
-    threshold = 0.01;
+    threshold = 1e-5;
+//    threshold = 0.01;
 //    threshold = 0;
 
     spectral = new Spectral(frfrags, fr_weights, frbed, threshold, coverage, use_secondary);
@@ -129,7 +129,7 @@ int Phaser::load_contig_blocks(ChromoPhaser *chromo_phaser)
 void Phaser::phasing()
 {
     uint prev_variant_count = 0;
-
+    CrossChromoPhaser *cross_chromo_phaser = new CrossChromoPhaser(WINDOW_OVERLAP, WINDOW_SIZE);
     for (uint rid = 0; rid < frvcf->contigs_count; rid++)
     {
         if (frvcf->jump_to_contig(rid) != 0)
@@ -171,8 +171,47 @@ void Phaser::phasing()
         spectral->release_chromo_phaser();
         delete chromo_phaser;
     }
+//    phasing_cross_chrom(cross_chromo_phaser);
 }
 
+
+void Phaser::phasing_cross_chrom(CrossChromoPhaser* crossChromoPhaser){
+    std::unordered_map<uint, std::vector<uint>> connected_comps = spectral->load_cross_chr_poss_info();
+    for (auto i : connected_comps)
+    {
+        std::vector<uint> &connected_comp = i.second;
+        int nblocks = connected_comp.size();
+        if (nblocks == 1)
+            continue;
+        int count = 0;
+
+        //split into window again
+        int HiC_poss_block = WINDOW_SIZE, overlap = WINDOW_OVERLAP;
+        crossChromoPhaser->phased->clear();
+        count = 0;
+        //update indexing scheme
+        for (auto blk_start_id: connected_comp)
+        {
+            crossChromoPhaser->phased->current_window_idxes.push_back(blk_start_id);
+            crossChromoPhaser->phased->mat2variant_index[count] = blk_start_id;
+            ptr_ResultforSingleVariant variant =  crossChromoPhaser->results_for_variant[blk_start_id];
+            if (is_uninitialized(variant->block))
+            {
+                crossChromoPhaser->phased->variant2mat_index[blk_start_id] = count;
+            }
+            else
+            {
+                auto blk = variant->block.lock();
+                for (auto _var_id : blk->variant_idxes)
+                {
+                    crossChromoPhaser->phased->variant2mat_index[_var_id] = count;
+                }
+            }
+            count ++;
+        }
+        spectral->cross_chr_poss_solver(nblocks);
+    }
+}
 
 void Phaser::phasing_by_chrom(uint var_count, ChromoPhaser *chromo_phaser)
 {
@@ -206,10 +245,10 @@ void Phaser::phasing_by_chrom(uint var_count, ChromoPhaser *chromo_phaser)
 
 void Phaser::phase_HiC_poss(ChromoPhaser *chromo_phaser)
 {
-    std::unordered_map<uint, std::set<uint>> connected_comps = spectral->load_hic_poss_info();
+    std::unordered_map<uint, std::vector<uint>> connected_comps = spectral->load_hic_poss_info();
     for (auto i : connected_comps)
     {
-        std::set<uint> &connected_comp = i.second;
+        std::vector<uint> &connected_comp = i.second;
         int nblocks = connected_comp.size();
         if (nblocks == 1)
             continue;
@@ -247,14 +286,13 @@ void Phaser::phase_HiC_poss(ChromoPhaser *chromo_phaser)
                 }
                 count ++;
             }
-
             spectral->hic_poss_solver(nblocks);        
         }
     }
     
 }
 
-void Phaser::phase_HiC_recursive(ChromoPhaser *chromo_phaser, std::set<uint> &connected_comp)
+void Phaser::phase_HiC_recursive(ChromoPhaser *chromo_phaser, std::vector<uint> &connected_comp)
 {
     int count = 0;
     std::unordered_map<uint, uint> var2id;
