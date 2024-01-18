@@ -607,6 +607,9 @@ void Spectral::cal_prob_matrix(ViewMap &weighted_graph, CViewMap &count_graph, G
 
             double score = weighted_graph(2 * i, 2*j) - weighted_graph(2*i, 2*j+1);
             bool score_flag = false;
+            if (tm1 !=0 || tm2 !=0 || tm3 !=0 || tm4 !=0) {
+                int tmp = 0;
+            }
             if (tm1 != 0 && tm2 != 0){
                 score_flag = true;
             }
@@ -1665,7 +1668,7 @@ void Spectral::split_phased_blk(uint idx)
     this->phasing_window->split_after_phasing(idx, split_var_idx);
 }
 
-std::unordered_map<uint, std::set<uint>> Spectral::load_hic_poss_info()
+std::unordered_map<uint, std::vector<uint>> Spectral::load_hic_poss_info()
 {
     std::set<uint>var_idx;
     std::map<uint, uint> var_idx_map;
@@ -1707,15 +1710,18 @@ std::unordered_map<uint, std::set<uint>> Spectral::load_hic_poss_info()
         var2idx[i.first] = start_var2idx[i.second];
     }
 
-    // now use disjoint set to find connected component
     std::vector<uint> parent;
+    std::vector<uint> parent_qu;
     std::vector<uint> size;
-    
+
 
     parent.resize(var_idx.size());
+    parent_qu.resize(var_idx.size());
     size.resize(var_idx.size());
-    for (int i = 0; i < var_idx.size(); i++)
+    for (int i = 0; i < var_idx.size(); i++) {
+        this->make_set(i, parent_qu, size);
         this->make_set(i, parent, size);
+    }
 
     for (auto &linker : hic_linker_container.linker)
     {
@@ -1731,15 +1737,36 @@ std::unordered_map<uint, std::set<uint>> Spectral::load_hic_poss_info()
     }
 
     std::set<uint> comps_ids;
-    std::unordered_map<uint, std::set<uint>> comps;
-    for (int i = 0; i < var_idx.size(); i++)
+    std::unordered_map<uint, std::vector<uint>> comps;
+    int icount = 0;
+    int i = 0;
+    std::set<uint> skipped_is;
+    std::set<uint> vector_set;
+    for (int j = 0; j < var_idx.size(); j++)
     {
-        if (comps.count(parent[i]) == 0)
+        if (skipped_is.count(j) != 0)
+            continue;
+        auto root_i = this->find_set(j, parent);
+        if (comps.count(root_i) == 0)
         {
-            comps[parent[i]] = std::set<uint>();
-            comps_ids.insert(parent[i]);
+            comps[root_i] = std::vector<uint>();
+            comps_ids.insert(root_i);
         }
-        comps[parent[i]].insert(idx2var[i]);
+        auto ci = j;
+
+        if (vector_set.count(idx2var[ci]) == 0) {
+            comps[root_i].push_back(idx2var[ci]);
+            vector_set.insert(idx2var[ci]);
+        }
+        while (parent[ci] != ci) {
+            auto t = idx2var[ci];
+            skipped_is.insert(ci);
+            ci = parent[ci];
+            if (vector_set.count(idx2var[ci]) == 0) {
+                comps[root_i].push_back(idx2var[ci]);
+                vector_set.insert(idx2var[ci]);
+            }
+        }
     }
     return comps;
 }
@@ -1838,3 +1865,9 @@ void Spectral::setOffset(uint offset) {
     Spectral::offset = offset;
 }
 
+void Spectral::cross_chr_poss_solver(int nblock) {
+
+}
+std::unordered_map<uint, std::vector<uint>>  Spectral::load_cross_chr_poss_info() {
+
+}

@@ -99,6 +99,7 @@ private:
     std::vector<FragmentReader* > frs;
     BEDReader *frbed;
     HiCLinkerContainer hic_linker_container;
+    HiCLinkerContainer cross_chr_linker_container;
     VariantGraph variant_graph;
     uint block_no;                  //start from 1
     ptr_PhasingWindow phasing_window;
@@ -112,7 +113,9 @@ public:
     void set_prev_buff(ViewMap& weighted_graph, CViewMap& count_graph);
     void solver();
     void hic_poss_solver(int nblock);
-    std::unordered_map<uint, std::set<uint>> load_hic_poss_info();
+    void cross_chr_poss_solver(int nblock);
+    std::unordered_map<uint, std::vector<uint>> load_hic_poss_info();
+    std::unordered_map<uint, std::vector<uint>> load_cross_chr_poss_info();
     void solver_recursive();
     void solver_subroutine(int block_count, std::map<uint, int> &subroutine_map, std::map<uint, uint>& subroutine_blk_start, std::map<uint,double> &block_qualities);
     inline void set_chromo_phaser(ChromoPhaser *chromo_phaser)
@@ -140,6 +143,7 @@ private:
 //    void add_snp_edge_matrix(Fragment &fragment, ViewMap &weighted_graph, CViewMap &count_graph, double w);
     void add_snp_edge_barcode(ViewMap &weighted_graph, CViewMap &count_graph);
     void add_snp_edge_hic(ViewMap &weighted_graph, CViewMap &count_graph);
+    void add_snp_edge_cross_chr(ViewMap &weighted_graph, CViewMap &count_graph);
     void add_snp_edge_subroutine(ViewMap &sub_weighted_graph, CViewMap &sub_count_graph, VariantGraph & sub_variant_graph, std::map<uint, int> & subroutine_map, std::map<uint, uint> & subroutine_blk_start, std::map<uint,double> &block_qualities);
     void add_snp_edge_barcode_subroutine(ViewMap &sub_weighted_graph, CViewMap &sub_count_graph, VariantGraph & sub_variant_graph, std::map<uint, int> & subroutine_map, std::map<uint, uint> & subroutine_blk_start);
     void add_snp_edge_tgs();
@@ -172,6 +176,7 @@ private:
     void call_haplotype(GMatrix &adj_mat, const std::set<uint> &variant_idx_mat, int &block_count, std::map<uint, int> &subroutine_map, std::map<uint, uint> &subroutine_blk_start, bool sub, std::map<uint, double> &block_quality);
     //void call_haplotype_hic_link(const Eigen::MatrixBase<Derived> &adj_mat, HapStruct &phased_blocks, const unsigned int &idx);
     void load_hic_linker(int nblock);
+    void load_cross_chr_linker(int nblock);
     void cal_prob_matrix(ViewMap &weighted_graph, CViewMap &count_graph, GMatrix *weight, CMatrix *count, VariantGraph *variant_graph);
     void merge_hap_block();
     template <typename Derived>
@@ -326,26 +331,21 @@ private:
         size[v] = 1;
     }
 
-    inline int find_set(uint v, std::vector<uint> &parent) 
+    inline int find_set(uint v, std::vector<uint> &parent)
     {
-        if(parent[parent[v]] != parent[v])
-            parent[v]= find_set(parent[v], parent);
-        return parent[v];
-        //if (v == parent[v])
-        //    return v;
-        //return parent[v] = find_set(parent[v], parent);
+        while (parent[v] != v) {
+            v = parent[v];
+        }
+        return v;
     }
 
-    void union_sets(uint a, uint b, std::vector<uint> &parent, std::vector<uint> &size) 
+    void union_sets(uint a, uint b, std::vector<uint> &parent, std::vector<uint> &size)
     {
-        a = find_set(a, parent);
-        b = find_set(b, parent);
-        if (a != b) 
+        int pa = find_set(a, parent);
+        int pb = find_set(b, parent);
+        if (pa != pb)
         {
-            if (size[a] < size[b])
-                swap(a, b);
-            parent[b] = a;
-            size[a] += size[b];
+            parent[pa] = pb;
         }
     }
 
