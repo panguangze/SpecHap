@@ -592,3 +592,40 @@ void ChromoPhaser::update_overlap_region_block_idx()
 
 
 //------------------------------- ChromoPhaser Class End ------------------------------------//
+
+CrossChromoPhaser::CrossChromoPhaser(const uint &window_overlap, const uint &intended_window_size)
+        :window_overlap(window_overlap), intended_window_size(intended_window_size)
+{
+    pre_intended_window_size = intended_window_size;
+    phased = std::make_shared<PhasingWindow>(intended_window_size,  window_overlap);
+    no_of_recursion = 1;
+    max_no_of_recursion = 3;            //for control of window size
+    window_size = window_overlap + intended_window_size;
+
+}
+CrossChromoPhaser::~CrossChromoPhaser()
+{
+    //for (auto i : results_for_variant)
+    //    delete i;
+    //for (auto i : overlap_region_result_dup)
+    //    delete i.second;
+    //for (auto i : overlap_region_block_dup)
+    //    delete i.second;
+
+    results_for_variant.clear();
+}
+
+void CrossChromoPhaser::construct_phasing_window_initialize()
+{
+    for (uint i = 0; i < variant_count; i++)
+        phased->insert_block_initial(this->variant_to_block_id[i], i, results_for_variant[i]);
+    phased->total_blk_count = phased->rest_blk_count = phased->blocks.size();
+}
+
+void CrossChromoPhaser::construct_phasing_window_r_initialize()
+{
+    if (no_of_recursion < max_no_of_recursion)
+        no_of_recursion++;
+    cal_window_recursive_solver();
+    phased->initialize_for_recursive_solver(intended_window_size, window_overlap);
+}

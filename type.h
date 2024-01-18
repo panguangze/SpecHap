@@ -40,6 +40,7 @@ public:
     ~Fragment() = default;
     uint start, end;
     int type = FRAG_NORMAL;
+    bool sv_support = false;
 
     int getType() const;
 
@@ -240,6 +241,45 @@ public:
     inline uint get_block_count() { return uint(phased->blocks.size());}
     inline uint get_var_pos(uint idx) { return results_for_variant[idx]->get_pos(); }
 
+};
+
+class CrossChromoPhaser
+{
+public:
+    //initialized parameter
+    uint variant_count;         //variant no to phase
+    uint init_block_count;
+    uint window_overlap;
+    uint intended_window_size, pre_intended_window_size;    //intended_window_size: recusivly increasing
+    uint window_size;          //window size with overlap
+    uint no_of_recursion;
+    uint max_no_of_recursion;
+
+    //to be calculated afterwards
+
+    //ChromoPhaser is obliged to manage the following two container
+    std::vector<std::shared_ptr<ResultforSingleVariant> > results_for_variant;
+    std::unordered_map<uint, uint> variant_to_block_id;
+
+
+    ptr_PhasingWindow phased;
+
+
+public:
+    CrossChromoPhaser(const uint &window_overlap, const uint &intended_window_size);
+    ~CrossChromoPhaser();
+    void construct_phasing_window_initialize();                             //initialize struct
+    void construct_phasing_window_r_initialize();
+    inline void cal_window_recursive_solver()
+    {
+        // max 3000
+        intended_window_size = pre_intended_window_size * no_of_recursion;
+        window_overlap = intended_window_size / 20;
+        window_size = intended_window_size + window_overlap;
+        //window_no = uint(ceil(phased->curr_window_block_count() / double (window_size) ));
+    }
+    inline uint get_block_count() { return uint(phased->blocks.size());}
+    inline uint get_var_pos(uint idx) { return results_for_variant[idx]->get_pos(); }
 
 };
 

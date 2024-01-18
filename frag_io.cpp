@@ -86,6 +86,7 @@ bool FragmentReader::get_next_pe(Fragment &fragment)
         auto token_size = buffer.size();
         if (buffer.back() == "SV" || buffer.back() == "SV_REF") {
             token_size = buffer.size() - 1;
+            fragment.sv_support = true;
         }
         if (token_size < 2)
         {
@@ -191,6 +192,7 @@ bool FragmentReader::get_next_tenx(Fragment &fragment)
         auto token_size = buffer.size();
         if (buffer.back() == "SV" || buffer.back() == "SV_REF") {
             token_size = buffer.size() - 1;
+            fragment.sv_support = true;
         }
         if (token_size < 2)
         {

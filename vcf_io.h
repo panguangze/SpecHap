@@ -106,7 +106,8 @@ public:
             return -1;
         //new contig
         if (buffer->rid != this->curr_bcf_contig)
-            return -1;
+//            return -1;
+            int stmp = 0;
         //bcf_subset_format(header, record);
         bcf_unpack(buffer, BCF_UN_ALL);
 
