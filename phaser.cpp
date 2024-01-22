@@ -259,7 +259,20 @@ void Phaser::phase_HiC_poss(ChromoPhaser *chromo_phaser)
         int HiC_poss_block = WINDOW_SIZE, overlap = WINDOW_OVERLAP;
         if (nblocks > HiC_poss_block + overlap)
         {
-            this->phase_HiC_recursive(chromo_phaser, connected_comp);  
+            this->phase_HiC_recursive(chromo_phaser, connected_comp);
+//            int ncount = 0;
+//            while (ncount < 5) {
+//                std::unordered_map<uint, std::vector<uint>> connected_comps2 = spectral->load_hic_poss_info();
+//                for (auto i : connected_comps2) {
+//                    if(i.second.size() > 300) {
+//                        this->phase_HiC_recursive(chromo_phaser, i.second);
+//                        int csize = i.second.size();
+//                        int tm = 0;
+//                    }
+//                }
+//            }
+//            std::unordered_map<uint, std::vector<uint>> connected_comps2 = spectral->load_hic_poss_info();
+//            this->phase_HiC_recursive(chromo_phaser, connected_comps2[5321]);
         }
         //direct phase
         else 

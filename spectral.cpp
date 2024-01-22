@@ -1712,6 +1712,7 @@ std::unordered_map<uint, std::vector<uint>> Spectral::load_hic_poss_info()
 
     std::vector<uint> parent;
     std::vector<uint> parent_qu;
+//    std::unordered_map<uint, std::set<uint>>
     std::vector<uint> size;
 
 
@@ -1722,53 +1723,55 @@ std::unordered_map<uint, std::vector<uint>> Spectral::load_hic_poss_info()
         this->make_set(i, parent_qu, size);
         this->make_set(i, parent, size);
     }
-
-    for (auto &linker : hic_linker_container.linker)
-    {
-        uint linker_start = var2idx[linker.second.start_var_idx];
-        for (auto &info: linker.second.hic_info)
-        {
-            uint linker_idx = var2idx[info.first];
-            if (linker_idx == linker_start)
-                continue;
-            if (this->find_set(linker_start, parent) != this->find_set(linker_idx, parent))
-                this->union_sets(linker_start, linker_idx, parent, size);
-        }
-    }
-
-    std::set<uint> comps_ids;
-    std::unordered_map<uint, std::vector<uint>> comps;
-    int icount = 0;
-    int i = 0;
-    std::set<uint> skipped_is;
-    std::set<uint> vector_set;
-    for (int j = 0; j < var_idx.size(); j++)
-    {
-        if (skipped_is.count(j) != 0)
-            continue;
-        auto root_i = this->find_set(j, parent);
-        if (comps.count(root_i) == 0)
-        {
-            comps[root_i] = std::vector<uint>();
-            comps_ids.insert(root_i);
-        }
-        auto ci = j;
-
-        if (vector_set.count(idx2var[ci]) == 0) {
-            comps[root_i].push_back(idx2var[ci]);
-            vector_set.insert(idx2var[ci]);
-        }
-        while (parent[ci] != ci) {
-            auto t = idx2var[ci];
-            skipped_is.insert(ci);
-            ci = parent[ci];
-            if (vector_set.count(idx2var[ci]) == 0) {
-                comps[root_i].push_back(idx2var[ci]);
-                vector_set.insert(idx2var[ci]);
-            }
-        }
-    }
+    auto comps = hic_linker_container.findConnectedComponents(var2idx, idx2var);
     return comps;
+//    for (auto &linker : hic_linker_container.linker)
+//    {
+//        uint linker_start = var2idx[linker.second.start_var_idx];
+//        for (auto &info: linker.second.hic_info)
+//        {
+//            uint linker_idx = var2idx[info.first];
+//            if (linker_idx == linker_start)
+//                continue;
+//            if (this->find_set(linker_start, parent) != this->find_set(linker_idx, parent)){
+//                this->union_sets(linker_start, linker_idx, parent, size);
+//            }
+//        }
+//    }
+//
+//    std::set<uint> comps_ids;
+//    std::unordered_map<uint, std::vector<uint>> comps;
+//    int icount = 0;
+//    int i = 0;
+//    std::set<uint> skipped_is;
+//    std::set<uint> vector_set;
+//    for (int j = 0; j < var_idx.size(); j++)
+//    {
+//        if (skipped_is.count(j) != 0)
+//            continue;
+//        auto root_i = this->find_set(j, parent);
+//        if (comps.count(root_i) == 0)
+//        {
+//            comps[root_i] = std::vector<uint>();
+//            comps_ids.insert(root_i);
+//        }
+//        auto ci = j;
+//
+//        if (vector_set.count(idx2var[ci]) == 0) {
+//            comps[root_i].push_back(idx2var[ci]);
+//            vector_set.insert(idx2var[ci]);
+//        }
+//        while (parent[ci] != ci) {
+//            auto t = idx2var[ci];
+//            skipped_is.insert(ci);
+//            ci = parent[ci];
+//            if (vector_set.count(idx2var[ci]) == 0) {
+//                comps[root_i].push_back(idx2var[ci]);
+//                vector_set.insert(idx2var[ci]);
+//            }
+//        }
+//    }
+//    return comps;
 }
 
 
