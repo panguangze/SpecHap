@@ -517,11 +517,21 @@ void Spectral::add_snp_edge_hic(ViewMap &weighted_graph, CViewMap &count_graph)
     {
         std::map<uint, std::pair<double,double> > block_supporting_likelyhood;
         HiCLinker &hic_linker = it->second;
+        bool is_link_fine = false;
+//        for (auto &i : hic_linker.hic_info)
+//        {
+//            if (this->chromo_phaser->results_for_variant[i.first]->block.lock()->results.size() > 1) {
+//                is_link_fine = true;
+//            }
+//        }
+//        if (!is_link_fine) continue;
         for (auto &i : hic_linker.hic_info)
         {
-            if (!phasing_window->in_range(i.first))
+            uint start_var_idx = this->chromo_phaser->results_for_variant[i.first]->block.lock()->start_variant_idx;
+//            if (start_var_idx == i.first) continue;
+            if (!phasing_window->in_range(start_var_idx))
                 continue;
-            auto a = this->phasing_window->var_idx2mat_idx(i.first);
+            auto a = this->phasing_window->var_idx2mat_idx(start_var_idx);
             if (a < 0 or a >= this->variant_count)
                 continue;
             uint blk_idx = this->phasing_window->mat_idx2var_idx(a);
@@ -650,11 +660,11 @@ void Spectral::cal_prob_matrix(ViewMap &weighted_graph, CViewMap &count_graph, G
 
     count_mat = count_graph;
 
-    //if (op == op_mode::TENX)
-    //{
-    //    for (auto &i : phasing_window->current_window_idxes)
-    //        cal_10x_filter(phasing_window->blocks[i]);
-    //}
+//    if (op == op_mode::TENX)
+//    {
+//        for (auto &i : phasing_window->current_window_idxes)
+//            cal_10x_filter(phasing_window->blocks[i]);
+//    }
     var_graph.load_connected_component();
 }
 
@@ -1716,17 +1726,46 @@ std::unordered_map<uint, std::set<uint>> Spectral::load_hic_poss_info()
     size.resize(var_idx.size());
     for (int i = 0; i < var_idx.size(); i++)
         this->make_set(i, parent, size);
+    std::map<uint,uint> prev_currents;
 
+    std::map<std::pair<uint , uint>, uint> block_link_count;
     for (auto &linker : hic_linker_container.linker)
     {
         uint linker_start = var2idx[linker.second.start_var_idx];
         for (auto &info: linker.second.hic_info)
         {
             uint linker_idx = var2idx[info.first];
+            auto p = std::make_pair(linker_start, linker_idx);
+            if(block_link_count.count(p) == 0)
+                block_link_count[p] = 1;
+            else
+                block_link_count[p]++;
+        }
+    }
+
+
+
+    for (auto &linker : hic_linker_container.linker)
+    {
+        uint linker_start = var2idx[linker.second.start_var_idx];
+        auto size1_1 = this->chromo_phaser->results_for_variant[linker.second.start_var_idx]->block.lock()->results.size() == 1;
+        auto sizel_1 = this->chromo_phaser->results_for_variant[linker.second.start_var_idx]->block.lock()->results.size() > 30;
+//        auto size1 = (this->chromo_phaser->results_for_variant[linker.second.start_var_idx]->block.lock()->results.size() == 1 || this->chromo_phaser->results_for_variant[linker.second.start_var_idx]->block.lock()->results.size() > 20);
+        for (auto &info: linker.second.hic_info)
+        {
+            uint linker_idx = var2idx[info.first];
             if (linker_idx == linker_start)
                 continue;
-            if (this->find_set(linker_start, parent) != this->find_set(linker_idx, parent))
-                this->union_sets(linker_start, linker_idx, parent, size);
+//            if (this->find_set(linker_start, parent) != this->find_set(linker_idx, parent))
+//                this->union_sets(linker_start, linker_idx, parent, size);
+            auto p = std::make_pair(linker_start, var2idx[info.first]);
+            auto size1_2 = this->chromo_phaser->results_for_variant[info.first]->block.lock()->results.size() == 1;
+            auto sizel_2 = this->chromo_phaser->results_for_variant[info.first]->block.lock()->results.size() > 30;
+            if ((block_link_count.count(p) != 0 && block_link_count[p] > 1) || (size1_1 && size1_2) || (sizel_1 && size1_2) || (sizel_2 && size1_1)){
+                if (this->find_set(linker_start, parent) != this->find_set(linker_idx, parent))
+                    this->union_sets(linker_start, linker_idx, parent, size);
+            }
+
         }
     }
 

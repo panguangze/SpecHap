@@ -134,6 +134,7 @@ public:
     uint setBlkIdx(uint k) {
         this->break_idxs.emplace(k);
     }
+    inline void setThrehold(double threhold) {this->threhold = threhold;}
 
 private:
     void add_snp_edge(Fragment &fragment, ViewMap &weighted_graph, CViewMap &count_graph, double w);

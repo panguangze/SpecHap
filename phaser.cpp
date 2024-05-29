@@ -209,7 +209,15 @@ void Phaser::phase_HiC_poss(ChromoPhaser *chromo_phaser)
     std::unordered_map<uint, std::set<uint>> connected_comps = spectral->load_hic_poss_info();
     for (auto i : connected_comps)
     {
-        std::set<uint> &connected_comp = i.second;
+        std::set<uint> connected_comp;
+        connected_comp = i.second;
+//        if (i.second.size() > 10) {
+//            for (auto j : i.second)
+//            {
+//                if (chromo_phaser->results_for_variant[j]->block.lock()->results.size() == 1 || chromo_phaser->results_for_variant[j]->block.lock()->results.size() < 10)
+//                    connected_comp.insert(j);
+//            }
+//        }
         int nblocks = connected_comp.size();
         if (nblocks == 1)
             continue;
@@ -220,7 +228,8 @@ void Phaser::phase_HiC_poss(ChromoPhaser *chromo_phaser)
         int HiC_poss_block = WINDOW_SIZE, overlap = WINDOW_OVERLAP;
         if (nblocks > HiC_poss_block + overlap)
         {
-            this->phase_HiC_recursive(chromo_phaser, connected_comp);  
+//            uint tmp = 1998;
+            this->phase_HiC_recursive(chromo_phaser, connected_comp);
         }
         //direct phase
         else 
