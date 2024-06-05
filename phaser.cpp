@@ -128,6 +128,7 @@ int Phaser::load_contig_blocks(ChromoPhaser *chromo_phaser)
 
 void Phaser::phasing()
 {
+    this->spectral->setThrehold(1e-5);
     uint prev_variant_count = 0;
 
     for (uint rid = 0; rid < frvcf->contigs_count; rid++)
